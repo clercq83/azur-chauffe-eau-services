@@ -834,6 +834,14 @@
       <input id="tel" type="tel" placeholder="06 00 00 00 00">
       <label for="ville">Commune</label>
       <input id="ville" type="text" placeholder="Ex. Sanary-sur-Mer">
+      <label for="logement">Votre logement</label>
+      <select id="logement">
+        <option>Maison de plain-pied</option>
+        <option>Maison à étage</option>
+        <option>Appartement en rez-de-chaussée</option>
+        <option>Appartement avec ascenseur</option>
+        <option>Appartement sans ascenseur</option>
+      </select>
       <label for="besoin">Besoin</label>
       <select id="besoin">
         <option>Dépannage urgent</option>
@@ -842,7 +850,7 @@
         <option>Autre demande</option>
       </select>
       <label for="msg">Message</label>
-      <textarea id="msg" placeholder="Décrivez votre panne ou votre projet"></textarea>
+      <textarea id="msg" placeholder="Décrivez votre panne ou votre projet. Si vous êtes sans ascenseur, précisez l'étage."></textarea>
       <button type="button" class="btn-primary">Envoyer ma demande</button>
     </form>
   </div>
