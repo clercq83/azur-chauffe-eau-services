@@ -285,6 +285,30 @@
   }
   .testimonial .author{font-size:13px;font-weight:600;color:var(--navy);}
   .testimonial .author span{font-weight:400;color:var(--slate-soft);}
+  /* Photos de chantier */
+  .chantier-hero{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    border:1px solid var(--line);background:#fff;margin-bottom:24px;
+  }
+  .chantier-hero img{
+    width:100%;height:100%;display:block;aspect-ratio:4/5;
+    object-fit:contain;background:#2B2F33;
+  }
+  .chantier-hero .txt{padding:36px 34px;display:flex;flex-direction:column;justify-content:center;}
+  .chantier-hero .txt h3{font-size:23px;margin-bottom:14px;}
+  .chantier-hero .txt p{font-size:15px;color:var(--slate-soft);line-height:1.65;margin-bottom:12px;}
+  .chantier-hero .txt p:last-child{margin-bottom:0;}
+  .chantier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .chantier-grid figure{margin:0;background:#fff;border:1px solid var(--line);}
+  .chantier-grid img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;}
+  .chantier-grid figcaption{padding:14px 16px;font-size:13.5px;color:var(--slate-soft);line-height:1.55;}
+  .chantier-note{margin-top:22px;font-size:13px;color:var(--slate-soft);}
+  @media (max-width:820px){
+    .chantier-hero{grid-template-columns:1fr;}
+    .chantier-hero .txt{padding:26px 22px;}
+    .chantier-grid{grid-template-columns:1fr 1fr;gap:12px;}
+  }
+
   .price-group{
     font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
     color:var(--copper);font-weight:600;margin:28px 0 8px;
@@ -585,6 +609,37 @@
         <p>Technologie Thermor : protection active contre la corrosion, en complément de l'anode. Le meilleur de la durabilité.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="chantier">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">En vrai</div>
+      <h2>Ce que je sors des ballons du coin</h2>
+      <p>Toutes ces photos viennent du même chantier, fin août, dans le Var. Un chauffe-eau stéatite de sept ans, jamais purgé ni détartré. Vu de l'extérieur, il avait l'air neuf.</p>
+    </div>
+
+    <div class="chantier-hero">
+      <picture><source srcset="photos/resistance-et-anode.webp" type="image/webp"><img src="photos/resistance-et-anode.jpg" alt="Résistance stéatite propre à côté d'une anode magnésium entièrement usée" loading="lazy"></picture>
+      <div class="txt">
+        <h3>À gauche l'anode, à droite la résistance</h3>
+        <p>La résistance stéatite, une fois nettoyée, est intacte. Son fourreau l'a protégée.</p>
+        <p>L'anode, elle, a fondu. Il ne reste que l'âme, quelques millimètres. C'est son travail : elle se sacrifie à la place de la cuve, année après année. Tant qu'elle est là, la cuve tient.</p>
+        <p>Quand elle a disparu, c'est la cuve qui s'attaque. Et une cuve percée ne se répare pas, elle se remplace.</p>
+      </div>
+    </div>
+
+    <div class="chantier-grid">
+      <figure><picture><source srcset="photos/bride-entartree.webp" type="image/webp"><img src="photos/bride-entartree.jpg" alt="Bride de chauffe-eau presque obstruée par le calcaire" loading="lazy"></picture><figcaption>La bride, presque bouchée. C'est par là que l'eau circule.</figcaption></figure>
+      <figure><picture><source srcset="photos/calcaire-seau.webp" type="image/webp"><img src="photos/calcaire-seau.jpg" alt="Bloc de calcaire retiré d'un chauffe-eau, dans un seau" loading="lazy"></picture><figcaption>Le calcaire sorti d'un seul ballon. Ce volume-là, votre résistance devait le chauffer tous les jours.</figcaption></figure>
+      <figure><picture><source srcset="photos/resistance-entartree-main.webp" type="image/webp"><img src="photos/resistance-entartree-main.jpg" alt="Résistance de chauffe-eau couverte de tartre, tenue à la main" loading="lazy"></picture><figcaption>La résistance telle qu'elle sort. Sous cette croûte, elle chauffait encore, mais en consommant bien plus.</figcaption></figure>
+      <figure><picture><source srcset="photos/extraction-resistance.webp" type="image/webp"><img src="photos/extraction-resistance.jpg" alt="Extraction de la résistance stéatite d'un chauffe-eau" loading="lazy"></picture><figcaption>L'extraction. La stéatite est protégée par son fourreau, c'est ce qui la sauve dans une eau comme la nôtre.</figcaption></figure>
+      <figure><picture><source srcset="photos/anode-usee.webp" type="image/webp"><img src="photos/anode-usee.jpg" alt="Anode magnésium usée, recouverte de dépôt calcaire" loading="lazy"></picture><figcaption>L'anode, vue de près. Ce qui reste sous la croûte tient dans deux doigts.</figcaption></figure>
+      <figure><picture><source srcset="photos/controle-electrique.webp" type="image/webp"><img src="photos/controle-electrique.jpg" alt="Contrôle électrique au bornier d'un chauffe-eau" loading="lazy"></picture><figcaption>Le contrôle électrique avant remise en service. C'est l'autre moitié du métier.</figcaption></figure>
+    </div>
+
+    <p class="chantier-note">Photos prises sur mes propres interventions. Aucune image d'illustration achetée.</p>
   </div>
 </section>
 
