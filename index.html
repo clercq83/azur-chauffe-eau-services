@@ -36,38 +36,6 @@
     line-height:1.6;
   }
 
-  /* Promo marquee */
-  .promo-bar{
-    background:var(--copper);
-    color:#fff;
-    overflow:hidden;
-    white-space:nowrap;
-    position:relative;
-  }
-  .promo-track{
-    display:inline-flex;
-    animation:scroll-left 18s linear infinite;
-    padding:10px 0;
-  }
-  .promo-track span{
-    display:inline-flex;
-    align-items:center;
-    font-size:13.5px;
-    font-weight:600;
-    letter-spacing:.02em;
-    padding:0 32px;
-    white-space:nowrap;
-  }
-  .promo-track span::after{
-    content:"●";
-    margin-left:32px;
-    color:#fff;
-    opacity:.5;
-  }
-  @keyframes scroll-left{
-    0%{transform:translateX(0);}
-    100%{transform:translateX(-50%);}
-  }
   h1,h2,h3{
     font-family:'Fraunces',serif;
     font-weight:500;
@@ -415,15 +383,6 @@
 </style>
 </head>
 <body>
-
-<div class="promo-bar">
-  <div class="promo-track">
-    <span>Votre chauffe-eau 100L livré et posé à partir de 790 €, devis gratuit</span>
-    <span>Votre chauffe-eau 100L livré et posé à partir de 790 €, devis gratuit</span>
-    <span>Votre chauffe-eau 100L livré et posé à partir de 790 €, devis gratuit</span>
-    <span>Votre chauffe-eau 100L livré et posé à partir de 790 €, devis gratuit</span>
-  </div>
-</div>
 
 <header>
   <div class="wrap">
