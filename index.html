@@ -287,6 +287,12 @@
     font-size:14.5px;color:var(--slate);line-height:1.65;
   }
   .price-note strong{display:block;margin-bottom:6px;color:var(--navy);}
+  .price-split{
+    display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 16px;
+    background:#fff;border:1px solid var(--line);font-size:13.5px;color:var(--slate-soft);
+  }
+  .price-split i{font-size:20px;color:var(--navy);flex:none;}
+  .price-split strong{color:var(--slate);}
   .section-head .avis-link{color:var(--copper);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;}
 
   /* Pricing */
@@ -779,6 +785,16 @@
       <div class="price-row"><span class="label">Complet (fourniture + pose, 100L)</span><span class="val">à partir de 790 €*</span></div>
       <div class="price-row"><span class="label">Volumes supérieurs (150, 200, 250, 300 litres)</span><span class="val">sur devis gratuit</span></div>
     </div>
+    <!-- Paiement en plusieurs fois (Alma), en attente : ne pas activer tant
+         que le compte Alma de Lionel n'existe pas reellement, annoncer un
+         moyen de paiement qui n'existe pas serait trompeur. Des que le
+         compte est cree, faire passer ce bloc de commentaire a du vrai HTML
+         (le retirer de l'intérieur du commentaire) pour le rendre visible.
+    <div class="price-split">
+      <i class="ti ti-credit-card"></i>
+      <span><strong>Paiement en plusieurs fois disponible</strong>, en 2, 3 ou 4 fois avec Alma, sans dossier ni justificatif.</span>
+    </div>
+    -->
     <div class="price-note">
       <strong>Pourquoi un 300 litres coûte nettement plus cher.</strong>
       Ce n'est pas seulement l'appareil. Un 300 litres pèse près de 70 kg à vide, et plus de 360 kg une fois rempli.
