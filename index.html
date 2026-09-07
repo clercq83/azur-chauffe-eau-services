@@ -402,6 +402,7 @@
       <a href="#zone">Zone</a>
       <a href="#contact">Contact</a>
     </nav>
+    <a href="#contact" class="btn btn-ghost" id="lien-reserver">Réserver un créneau</a>
     <a href="#contact" class="btn btn-primary">Devis gratuit</a>
   </div>
 </header>
@@ -930,6 +931,12 @@
       document.getElementById("zc-price").textContent = info.price;
       document.getElementById("zc-desc").textContent = info.desc;
     });
+  });
+
+  // Le bouton "Reserver un creneau" scrolle vers le formulaire et met le
+  // focus directement sur le champ jour, pour aller droit au but.
+  document.getElementById("lien-reserver").addEventListener("click", () => {
+    setTimeout(() => document.getElementById("jour").focus(), 400);
   });
 
   // Le bouton du formulaire de contact ne faisait rien au clic. Pas de
