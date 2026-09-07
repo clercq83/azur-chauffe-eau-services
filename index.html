@@ -865,9 +865,18 @@
         <option>Pose neuve</option>
         <option>Autre demande</option>
       </select>
+      <label for="jour">Jour souhaité pour l'intervention</label>
+      <input id="jour" type="date">
+      <label for="moment">Moment préféré</label>
+      <select id="moment">
+        <option>Peu importe</option>
+        <option>Matin</option>
+        <option>Après-midi</option>
+      </select>
       <label for="msg">Message</label>
       <textarea id="msg" placeholder="Décrivez votre panne ou votre projet. Si vous êtes sans ascenseur, précisez l'étage."></textarea>
-      <button type="button" class="btn-primary">Envoyer ma demande</button>
+      <button type="button" class="btn-primary" id="envoyer-demande">Envoyer ma demande</button>
+      <p id="envoi-note" style="margin-top:12px;font-size:12.5px;color:var(--slate-soft);" hidden>Votre e-mail va s'ouvrir avec le message pré-rempli, il ne reste qu'à l'envoyer. Le créneau est une préférence, je vous rappelle pour le confirmer.</p>
     </form>
   </div>
 </section>
@@ -922,6 +931,31 @@
       document.getElementById("zc-price").textContent = info.price;
       document.getElementById("zc-desc").textContent = info.desc;
     });
+  });
+
+  // Le bouton du formulaire de contact ne faisait rien au clic. Pas de
+  // reservation en ligne ni de paiement pour l'instant (pas de compte
+  // Stripe/SumUp), donc le formulaire ouvre un e-mail pre-rempli vers
+  // l'adresse deja surveillee, creneau souhaite inclus a confirmer par
+  // telephone.
+  document.getElementById("envoyer-demande").addEventListener("click", () => {
+    const nom = document.getElementById("nom").value || "(non renseigné)";
+    const tel = document.getElementById("tel").value || "(non renseigné)";
+    const ville = document.getElementById("ville").value || "(non renseignée)";
+    const logement = document.getElementById("logement").value;
+    const besoin = document.getElementById("besoin").value;
+    const jour = document.getElementById("jour").value || "(pas de préférence)";
+    const moment = document.getElementById("moment").value;
+    const msg = document.getElementById("msg").value || "(aucun message)";
+    const sujet = encodeURIComponent("Demande de devis, Azur Chauffe-Eau Services");
+    const corps = encodeURIComponent(
+      "Besoin : " + besoin + "\nNom : " + nom + "\nTéléphone : " + tel +
+      "\nCommune : " + ville + "\nLogement : " + logement +
+      "\nJour souhaité : " + jour + "\nMoment préféré : " + moment +
+      "\n\nMessage :\n" + msg
+    );
+    window.location.href = "mailto:contact@azur-chauffe-eau.fr?subject=" + sujet + "&body=" + corps;
+    document.getElementById("envoi-note").hidden = false;
   });
 
   // Lien venant de paca-chauffe-eau-services : ?secteur=ouest ou ?secteur=argens.
