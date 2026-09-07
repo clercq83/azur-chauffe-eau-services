@@ -923,6 +923,24 @@
       document.getElementById("zc-desc").textContent = info.desc;
     });
   });
+
+  // Lien venant de paca-chauffe-eau-services : ?secteur=ouest ou ?secteur=argens.
+  // Le meme artisan couvre les deux pour l'instant, donc pas de contenu
+  // different, juste un message d'accueil et un saut direct vers la zone,
+  // pour que le clic ne semble pas ignorer le secteur choisi.
+  const secteur = new URLSearchParams(location.search).get("secteur");
+  if (secteur === "ouest" || secteur === "argens") {
+    const infos = {
+      ouest:  {nom: "Azur Ouest, Bandol à Hyères",     couleur: "#0EA5E9"},
+      argens: {nom: "Argens, Fréjus à Brignoles",       couleur: "#0D9488"},
+    };
+    const info = infos[secteur];
+    const bandeau = document.createElement("div");
+    bandeau.style.cssText = "background:" + info.couleur + ";color:#fff;text-align:center;padding:12px 16px;font-size:14px;";
+    bandeau.textContent = "Secteur " + info.nom + ". C'est moi qui interviens sur toute la zone.";
+    document.body.insertBefore(bandeau, document.body.firstChild);
+    document.getElementById("zone").scrollIntoView({behavior: "smooth"});
+  }
 </script>
 
 </body>
