@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://azur-chauffe-eau.fr/sitemap.xml
