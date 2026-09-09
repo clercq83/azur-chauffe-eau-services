@@ -451,7 +451,7 @@
     <p>Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères.</p>
     <div class="actions">
       <a href="tel:+33644170879" class="btn btn-primary" style="background:var(--red);border-color:var(--red);">☎ Panne maintenant, appelez</a>
-      <a href="#contact" class="btn btn-ghost" id="lien-reserver" style="border-color:#34D399;color:#34D399;">Réserver un créneau</a>
+      <a href="#tarifs" class="btn btn-ghost" id="lien-reserver" style="border-color:#34D399;color:#34D399;">Réserver un créneau</a>
     </div>
   </div>
   <div class="coil" aria-hidden="true">
@@ -1144,11 +1144,9 @@
     });
   });
 
-  // Le bouton "Reserver un creneau" scrolle vers le formulaire et met le
-  // focus directement sur le champ jour, pour aller droit au but.
-  document.getElementById("lien-reserver").addEventListener("click", () => {
-    setTimeout(() => document.getElementById("jour").focus(), 400);
-  });
+  // Le bouton "Reserver un creneau" pointe vers le configurateur (#tarifs) :
+  // reserver sans connaitre le prix n'a pas de sens, le prix doit venir
+  // avant. Un simple lien d'ancre suffit, pas besoin de JS particulier ici.
 
   // Le bouton du formulaire de contact ne faisait rien au clic. Pas de
   // reservation en ligne ni de paiement pour l'instant (pas de compte
