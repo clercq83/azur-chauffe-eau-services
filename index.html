@@ -856,6 +856,7 @@
         <div class="cfg-price" id="cfg-prix">790 €</div>
         <div class="cfg-price-note" id="cfg-note">Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.</div>
         <a href="#contact" class="btn btn-primary" id="cfg-cta">Demander ce chauffe-eau</a>
+        <a href="#" class="btn btn-ghost" id="cfg-devis" style="margin-top:10px;text-align:center;">Voir le devis indicatif</a>
       </div>
     </div>
     <!-- Paiement en plusieurs fois (Alma), en attente : ne pas activer tant
@@ -981,6 +982,36 @@
 </div>
 
 <script>
+  // Configuration du/des partenaire(s) assignes a ce site, par secteur.
+  // Aujourd'hui Lionel est l'artisan sur les deux secteurs (Ouest et
+  // Argens) -- le jour ou un partenaire reprend un secteur, il suffit de
+  // changer SES champs ici : le routage des demandes (mailto) et le devis
+  // genere automatiquement s'adaptent tout seuls, rien d'autre a toucher.
+  const PARTENAIRES = {
+    ouest: {
+      nom: "Entreprise Clercq (Lionel Clercq)",
+      forme: "Entreprise Individuelle",
+      siret: "510 980 717",
+      adresse: "Var (83)",
+      tel: "06 44 17 08 79",
+      email: "contact@azur-chauffe-eau.fr",
+      assurance: "[assureur et n° de police à compléter]",
+    },
+    argens: {
+      nom: "Entreprise Clercq (Lionel Clercq)",
+      forme: "Entreprise Individuelle",
+      siret: "510 980 717",
+      adresse: "Var (83)",
+      tel: "06 44 17 08 79",
+      email: "contact@azur-chauffe-eau.fr",
+      assurance: "[assureur et n° de police à compléter]",
+    },
+  };
+  function partenaireActuel(){
+    const secteur = new URLSearchParams(location.search).get("secteur");
+    return PARTENAIRES[secteur] || PARTENAIRES.ouest;
+  }
+
   const zoneInfo = {
     proche: {
       eyebrow: "Zone prioritaire",
@@ -1111,25 +1142,95 @@
   });
   dessinerConfigurateur();
 
+  // Calcule le prix actuel du configurateur en un seul endroit, reutilise
+  // par le CTA "Demander ce chauffe-eau" et par le generateur de devis.
+  function calculPrixActuel(){
+    const dispo = PRIX_CFG[cfgVolume];
+    const base = prixBase(dispo, cfgType);
+    const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
+    const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
+    return { base, supEtage, supEmplacement, total: base + supEtage + supEmplacement };
+  }
+
   // Le CTA du configurateur emmene vers le formulaire avec la config choisie
   // pre-remplie dans le message, pour eviter au client de la retaper.
   document.getElementById("cfg-cta").addEventListener("click", () => {
     setTimeout(() => {
       const msg = document.getElementById("msg");
-      const dispo = PRIX_CFG[cfgVolume];
-      const base = prixBase(dispo, cfgType);
-      const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
-      const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
-      const prix = base + supEtage + supEmplacement;
+      const { total } = calculPrixActuel();
       if (!msg.value) {
         msg.value = "Chauffe-eau souhaité : " + cfgVolume + " L, type " + TYPE_LABEL[cfgType] +
           ", accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement] +
-          " (prix indiqué sur le site : " + prix + " €).";
+          " (prix indiqué sur le site : " + total + " €).";
       }
       document.getElementById("besoin").value = "Remplacement";
       const logementSelect = document.getElementById("logement");
       if (cfgEtage > 0) logementSelect.value = "Appartement sans ascenseur";
     }, 300);
+  });
+
+  // Genere un devis indicatif imprimable a partir de la config choisie et
+  // du/des partenaire(s) assigne(s) a ce site (voir PARTENAIRES en haut du
+  // script). Ce n'est PAS le devis legal final (pas de numerotation
+  // sequentielle officielle, pas de signature) : c'est un recapitulatif
+  // transparent pour le client, a confirmer ensuite par le partenaire selon
+  // sa propre serie de numerotation (voir modele-devis-partenaire.md).
+  function genererDevisHTML(){
+    const p = partenaireActuel();
+    const { base, supEtage, supEmplacement, total } = calculPrixActuel();
+    const nomClient = document.getElementById("nom").value || "[Nom du client]";
+    const communeClient = document.getElementById("ville").value || "[Commune]";
+    const now = new Date();
+    const numero = "AZUR-" + now.toISOString().slice(0,10).replace(/-/g,"") + "-" + now.getHours() + now.getMinutes();
+    const dateStr = now.toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
+    const validite = new Date(now.getTime() + 30*24*3600*1000).toLocaleDateString("fr-FR");
+
+    const lignes = [
+      ["Chauffe-eau " + cfgVolume + " L, résistance " + TYPE_LABEL[cfgType] + " (Thermor)", base]
+    ];
+    if (supEtage > 0) lignes.push(["Supplément accès (" + labelEtage(cfgEtage) + ")", supEtage]);
+    if (supEmplacement > 0) lignes.push(["Supplément emplacement (" + EMPLACEMENT_LABEL[cfgEmplacement] + ")", supEmplacement]);
+    const lignesHTML = lignes.map(([label, montant]) =>
+      "<tr><td>" + label + " — fourniture et pose comprises</td><td style='text-align:right'>" + montant + " €</td></tr>"
+    ).join("");
+
+    return "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'>" +
+      "<title>Devis indicatif " + numero + "</title>" +
+      "<style>" +
+      "body{font-family:Arial,sans-serif;color:#1A1A1A;max-width:720px;margin:40px auto;padding:0 24px;line-height:1.5;}" +
+      "h1{font-size:20px;} h2{font-size:14px;color:#0369A1;text-transform:uppercase;letter-spacing:.04em;margin-top:28px;}" +
+      "table{width:100%;border-collapse:collapse;margin-top:10px;} td{padding:8px 4px;border-bottom:1px solid #ddd;font-size:14px;}" +
+      ".total{font-weight:bold;font-size:16px;} .note{background:#F0F9FF;border-left:3px solid #0EA5E9;padding:12px 16px;font-size:13px;margin-top:20px;}" +
+      ".petit{font-size:12px;color:#555;}" +
+      "@media print{body{margin:0;}}" +
+      "</style></head><body>" +
+      "<h1>Azur Chauffe-Eau Services</h1>" +
+      "<p class='petit'>" + p.nom + " — " + p.forme + " — SIRET " + p.siret + "<br>" + p.adresse + " — " + p.tel + " — " + p.email + "</p>" +
+      "<h2>Devis indicatif n° " + numero + "</h2>" +
+      "<p class='petit'>Date : " + dateStr + " — Valable jusqu'au " + validite + "</p>" +
+      "<h2>Client</h2>" +
+      "<p>" + nomClient + "<br>" + communeClient + "</p>" +
+      "<h2>Détail</h2>" +
+      "<table>" + lignesHTML +
+      "<tr class='total'><td>Total TTC</td><td style='text-align:right'>" + total + " €</td></tr>" +
+      "</table>" +
+      "<div class='note'>Ce devis est <strong>indicatif</strong>, généré automatiquement à partir du configurateur en ligne. " +
+      "Il sera confirmé par téléphone ou e-mail avant toute intervention, et remplacé par le devis définitif de l'artisan au moment de la réservation.</div>" +
+      "<h2>Intervention réalisée par</h2>" +
+      "<p>" + p.nom + ", sous l'enseigne Azur Chauffe-Eau Services.<br>Assurance : " + p.assurance + "</p>" +
+      "</body></html>";
+  }
+
+  document.getElementById("cfg-devis").addEventListener("click", (e) => {
+    e.preventDefault();
+    // Blob + URL.createObjectURL est plus fiable que window.open("", "_blank")
+    // + document.write (bloque par certains navigateurs/bloqueurs de popup).
+    const blob = new Blob([genererDevisHTML()], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const fenetre = window.open(url, "_blank");
+    if (!fenetre) {
+      alert("Le navigateur a bloqué l'ouverture du devis dans un nouvel onglet. Autorisez les fenêtres pop-up pour ce site, puis réessayez.");
+    }
   });
 
   document.querySelectorAll(".city-btn").forEach((btn) => {
@@ -1169,7 +1270,7 @@
       "\nJour souhaité : " + jour + "\nMoment préféré : " + moment +
       "\n\nMessage :\n" + msg
     );
-    window.location.href = "mailto:contact@azur-chauffe-eau.fr?subject=" + sujet + "&body=" + corps;
+    window.location.href = "mailto:" + partenaireActuel().email + "?subject=" + sujet + "&body=" + corps;
     document.getElementById("envoi-note").hidden = false;
   });
 
