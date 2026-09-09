@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Azur Chauffe-Eau Services | Chauffe-eau électrique</title>
-<meta name="description" content="Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères. Devis gratuit sous 24h, intervention rapide, c'est l'artisan qui vient, pas un sous-traitant.">
+<meta name="description" content="Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères. Prix instantané pour un remplacement, devis sous 24h pour un dépannage, c'est l'artisan qui vient, pas un sous-traitant.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="Azur Chauffe-Eau Services | Chauffe-eau électrique">
-<meta property="og:description" content="Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères. Devis gratuit sous 24h.">
+<meta property="og:description" content="Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères. Prix instantané pour un remplacement.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2312283D'/%3E%3Cpath d='M16 6C16 6 9 15 9 20a7 7 0 0 0 14 0c0-5-7-14-7-14z' fill='%23C97A3D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -471,7 +471,7 @@
 
 <div class="trust">
   <div class="wrap">
-    <span><strong>Devis gratuit</strong> sous 24h</span>
+    <span><strong>Prix instantané</strong> pour un remplacement</span>
     <span><strong>Intervention rapide</strong> en cas de panne</span>
     <span><strong>Thermor &amp; Atlantic</strong>, gamme professionnelle</span>
   </div>
@@ -492,9 +492,9 @@
       </div>
       <div class="card">
         <div class="num">02</div>
-        <h3>Devis gratuit sous 24h</h3>
-        <p>Je vous rappelle avec un tarif clair, sans engagement. Vous savez à quoi vous attendre avant même mon arrivée.</p>
-        <a href="#contact" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Demander mon devis gratuit</a>
+        <h3>Prix instantané, ou devis sous 24h</h3>
+        <p>Pour un remplacement, le prix ferme s'affiche tout de suite avec le configurateur. Pour un dépannage ou un cas particulier, je vous rappelle avec un tarif clair, sans engagement.</p>
+        <a href="#tarifs" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Voir les prix</a>
       </div>
       <div class="card">
         <div class="num">03</div>
@@ -1018,13 +1018,14 @@
   };
   const TYPE_LABEL = { blindee: "blindée", steatite: "stéatite", aci: "ACI Hybride", malicio: "Malicio, gain de place" };
   const EMPLACEMENT_LABEL = { sdb: "salle de bain / cuisine", placard: "placard", garage: "garage / cave", grenier: "grenier / combles" };
-  // Supplement d'acces sans ascenseur : par etage monte, proportionnel au
-  // poids du ballon (un 75L se porte a bout de bras, un 250L/300L rempli
+  // Supplement d'acces sans ascenseur : par etage au-dela du 1er, proportionnel
+  // au poids du ballon (un 75L se porte a bout de bras, un 250L/300L rempli
   // pese plusieurs centaines de kg, cf. note deja presente sur le 300L plus
-  // haut sur la page). Un 1er etage n'est pas un 4eme : le supplement est un
-  // montant PAR etage, multiplie par le nombre d'etages sans ascenseur
-  // (0 = plain-pied, RDC ou ascenseur, aucun supplement).
+  // haut sur la page). Le 1er etage ne coute rien de plus qu'un RDC (une
+  // seule volee de marches, pas un effort notable) : le supplement ne
+  // demarre qu'a partir du 2e etage.
   const SUPPLEMENT_PAR_ETAGE = { "75": 8, "100": 15, "150": 22, "200": 35, "250": 50, "300": 60 };
+  function etagesFactures(n){ return Math.max(0, n - 1); }
   function labelEtage(n){
     if (n === 0) return "plain-pied, RDC ou ascenseur";
     if (n === 4) return "4e étage et + sans ascenseur";
@@ -1066,7 +1067,7 @@
     document.querySelectorAll("#cfg-emplacement .cfg-btn").forEach((b) => b.classList.toggle("active", b.dataset.emplacement === cfgEmplacement));
 
     const base = prixBase(dispo, cfgType);
-    const supEtage = cfgEtage * SUPPLEMENT_PAR_ETAGE[cfgVolume];
+    const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
     const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
     const prix = base + supEtage + supEmplacement;
 
@@ -1117,7 +1118,7 @@
       const msg = document.getElementById("msg");
       const dispo = PRIX_CFG[cfgVolume];
       const base = prixBase(dispo, cfgType);
-      const supEtage = cfgEtage * SUPPLEMENT_PAR_ETAGE[cfgVolume];
+      const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
       const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
       const prix = base + supEtage + supEmplacement;
       if (!msg.value) {
