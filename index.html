@@ -97,6 +97,28 @@
     margin-bottom:34px;
   }
   .hero .actions{display:flex;gap:16px;flex-wrap:wrap;}
+  .badge-klarna{
+    display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:20px;
+    background:#fff;color:#1A1A1A;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+  }
+  .badge-klarna .marque{
+    font-family:Georgia,serif;font-weight:700;font-style:italic;background:#FFB3C7;color:#17120F;
+    padding:2px 9px;border-radius:5px;font-size:13px;
+  }
+  .badge-klarna .petit{font-weight:400;color:#777;font-size:12.5px;}
+  .info-point{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;
+    width:18px;height:18px;border-radius:50%;background:#E5E7EB;color:#555;
+    font-size:11.5px;font-weight:700;font-family:system-ui,sans-serif;cursor:help;flex-shrink:0;
+  }
+  .info-point::after{
+    content:attr(data-info);position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+    width:240px;background:#1A1A1A;color:#fff;font-size:12.5px;font-weight:400;line-height:1.5;
+    padding:10px 12px;border-radius:8px;text-align:left;
+    opacity:0;pointer-events:none;transition:opacity .15s ease;z-index:10;
+  }
+  .info-point:hover::after, .info-point:focus::after, .info-point.actif::after{opacity:1;}
   .hero .btn-primary{background:#fff;border-color:#fff;color:var(--navy);}
   .hero .btn-primary:hover{background:var(--cream);border-color:var(--cream);}
   .hero .btn-ghost{border-color:#5C7286;color:#E7ECEF;}
@@ -459,6 +481,12 @@
       <a href="tel:+33644170879" class="btn btn-primary" style="background:var(--red);border-color:var(--red);">☎ Panne maintenant, appelez</a>
       <a href="#tarifs" class="btn btn-ghost" id="lien-reserver" style="border-color:#34D399;color:#34D399;">Réserver un créneau</a>
     </div>
+    <div class="badge-klarna">
+      <span class="marque">Klarna</span>
+      Paiement en 3 ou 4 fois sans frais, pour un remplacement ou une pose
+      <span class="petit">(hors dépannage)</span>
+      <span class="info-point" tabindex="0" data-info="Un dépannage se règle immédiatement, sur place, car l'intervention est urgente. Le paiement en plusieurs fois s'applique au remplacement ou à la pose d'un chauffe-eau, réglés après l'intervention.">?</span>
+    </div>
   </div>
   <div class="coil" aria-hidden="true">
     <svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg">
@@ -480,7 +508,7 @@
     <span><strong>Prix instantané</strong> pour un remplacement</span>
     <span><strong>Intervention rapide</strong> en cas de panne</span>
     <span><strong>Thermor &amp; Atlantic</strong>, gamme professionnelle</span>
-    <span><strong>Paiement en 3 ou 4 fois</strong> sans frais, avec Klarna</span>
+    <span><strong>Paiement en 3 ou 4 fois</strong> sans frais (remplacement/pose), avec Klarna</span>
   </div>
 </div>
 
@@ -1296,6 +1324,21 @@
     bandeau.textContent = "Secteur " + info.nom + ". C'est moi qui interviens sur toute la zone.";
     document.body.insertBefore(bandeau, document.body.firstChild);
   }
+
+  // Info-bulle du badge Klarna : :hover/:focus suffit sur ordinateur, mais
+  // le tactile n'a pas de survol -- un tap bascule l'affichage, un tap
+  // ailleurs referme.
+  document.querySelectorAll(".info-point").forEach((pt) => {
+    pt.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const etaitActif = pt.classList.contains("actif");
+      document.querySelectorAll(".info-point.actif").forEach((p) => p.classList.remove("actif"));
+      if (!etaitActif) pt.classList.add("actif");
+    });
+  });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".info-point.actif").forEach((p) => p.classList.remove("actif"));
+  });
 </script>
 
 </body>
