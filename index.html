@@ -378,6 +378,12 @@
     padding-right:36px;cursor:pointer;
   }
   form .btn-primary{width:100%;text-align:center;background:var(--navy);color:#fff;border:none;padding:14px;cursor:pointer;}
+  .creneau-groupe{
+    background:var(--cream);border:1px solid var(--line);border-left:3px solid var(--navy);
+    padding:16px 16px 2px;margin-bottom:18px;
+  }
+  .creneau-titre{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy-deep);margin-bottom:12px;}
+  .creneau-groupe input, .creneau-groupe select{background:#fff;}
 
   footer{
     background:var(--navy-deep);
@@ -848,7 +854,7 @@
         <h3 id="cfg-titre">100 L, blindée</h3>
         <div class="cfg-price" id="cfg-prix">790 €</div>
         <div class="cfg-price-note" id="cfg-note">Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.</div>
-        <a href="#contact" class="btn btn-primary" id="cfg-cta">Demander ce chauffe-eau</a>
+        <a href="#contact" class="btn btn-primary" id="cfg-cta">Réserver ce chauffe-eau</a>
         <a href="#" class="btn btn-ghost" id="cfg-devis" style="margin-top:10px;text-align:center;">Voir le devis indicatif</a>
       </div>
     </div>
@@ -904,9 +910,9 @@
 <section id="contact">
   <div class="wrap contact-wrap">
     <div class="contact-info">
-      <div class="eyebrow">Contact</div>
-      <h2>Un devis, sans engagement</h2>
-      <p>Décrivez votre besoin, je vous recontacte rapidement pour convenir d'un créneau, urgence ou intervention planifiée.</p>
+      <div class="eyebrow">Réservation</div>
+      <h2>Réservez votre créneau</h2>
+      <p>Vos coordonnées, votre créneau souhaité, et c'est parti : je vous confirme le jour et l'horaire, puis vous envoie le lien pour régler l'acompte et valider définitivement votre réservation.</p>
       <div class="line"><span class="k">Téléphone</span><span>06 44 17 08 79</span></div>
       <div class="line"><span class="k">E-mail</span><span>contact@azur-chauffe-eau.fr</span></div>
     </div>
@@ -932,14 +938,19 @@
         <option>Pose neuve</option>
         <option>Autre demande</option>
       </select>
-      <label for="jour">Jour souhaité pour l'intervention</label>
-      <input id="jour" type="date">
-      <label for="moment">Moment préféré</label>
-      <select id="moment">
-        <option>Peu importe</option>
-        <option>Matin</option>
-        <option>Après-midi</option>
-      </select>
+
+      <div class="creneau-groupe">
+        <div class="creneau-titre">Votre créneau souhaité</div>
+        <label for="jour">Jour</label>
+        <input id="jour" type="date">
+        <label for="moment">Demi-journée</label>
+        <select id="moment">
+          <option>Peu importe</option>
+          <option>Matin</option>
+          <option>Après-midi</option>
+        </select>
+      </div>
+
       <label for="msg">Message</label>
       <textarea id="msg" placeholder="Décrivez votre panne ou votre projet. Si vous êtes sans ascenseur, précisez l'étage."></textarea>
       <p style="margin:-10px 0 18px;font-size:12.5px;color:var(--slate-soft);">
@@ -947,8 +958,8 @@
         à évaluer l'accès et le volume avant même de me déplacer. Pensez à les joindre au mail qui
         va s'ouvrir, avant de l'envoyer.
       </p>
-      <button type="button" class="btn-primary" id="envoyer-demande">Envoyer ma demande</button>
-      <p id="envoi-note" style="margin-top:12px;font-size:12.5px;color:var(--slate-soft);" hidden>Votre e-mail va s'ouvrir avec le message pré-rempli, il ne reste qu'à l'envoyer. Le créneau est une préférence, je vous rappelle pour le confirmer.</p>
+      <button type="button" class="btn-primary" id="envoyer-demande">Réserver mon créneau</button>
+      <p id="envoi-note" style="margin-top:12px;font-size:12.5px;color:var(--slate-soft);" hidden>Votre e-mail va s'ouvrir avec le message pré-rempli, il ne reste qu'à l'envoyer. Le créneau est une demande : je vous recontacte pour le confirmer, puis vous envoie le lien de paiement de l'acompte pour valider définitivement la réservation.</p>
     </form>
   </div>
 </section>
@@ -1136,7 +1147,7 @@
   dessinerConfigurateur();
 
   // Calcule le prix actuel du configurateur en un seul endroit, reutilise
-  // par le CTA "Demander ce chauffe-eau" et par le generateur de devis.
+  // par le CTA "Réserver ce chauffe-eau" et par le generateur de devis.
   function calculPrixActuel(){
     const dispo = PRIX_CFG[cfgVolume];
     const base = prixBase(dispo, cfgType);
@@ -1256,7 +1267,7 @@
     const jour = document.getElementById("jour").value || "(pas de préférence)";
     const moment = document.getElementById("moment").value;
     const msg = document.getElementById("msg").value || "(aucun message)";
-    const sujet = encodeURIComponent("Demande de devis, Azur Chauffe-Eau Services");
+    const sujet = encodeURIComponent("Demande de réservation, Azur Chauffe-Eau Services");
     const corps = encodeURIComponent(
       "Besoin : " + besoin + "\nNom : " + nom + "\nTéléphone : " + tel +
       "\nCommune : " + ville + "\nLogement : " + logement +
