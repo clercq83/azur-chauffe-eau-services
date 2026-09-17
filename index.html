@@ -968,6 +968,14 @@
         <option>Pose neuve</option>
         <option>Autre demande</option>
       </select>
+      <label for="mur">Nature du mur (à l'emplacement du chauffe-eau)</label>
+      <select id="mur">
+        <option>Placo / plaque de plâtre</option>
+        <option>Brique</option>
+        <option>Parpaing</option>
+        <option>Béton</option>
+        <option>Je ne sais pas</option>
+      </select>
 
       <div class="creneau-groupe">
         <div class="creneau-titre">Votre créneau souhaité</div>
@@ -1294,6 +1302,7 @@
     const ville = document.getElementById("ville").value || "(non renseignée)";
     const logement = document.getElementById("logement").value;
     const besoin = document.getElementById("besoin").value;
+    const mur = document.getElementById("mur").value;
     const jour = document.getElementById("jour").value || "(pas de préférence)";
     const moment = document.getElementById("moment").value;
     const msg = document.getElementById("msg").value || "(aucun message)";
@@ -1301,6 +1310,7 @@
     const corps = encodeURIComponent(
       "Besoin : " + besoin + "\nNom : " + nom + "\nTéléphone : " + tel +
       "\nCommune : " + ville + "\nLogement : " + logement +
+      "\nNature du mur : " + mur +
       "\nJour souhaité : " + jour + "\nMoment préféré : " + moment +
       "\n\nMessage :\n" + msg
     );
