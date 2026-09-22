@@ -549,6 +549,11 @@
           <button type="button" class="cfg-btn" data-type="aci">ACI Hybride</button>
           <button type="button" class="cfg-btn" data-type="malicio">Malicio, gain de place</button>
         </div>
+        <div class="cfg-label">Orientation</div>
+        <div class="cfg-row" id="cfg-orientation">
+          <button type="button" class="cfg-btn" data-orientation="vertical">Vertical</button>
+          <button type="button" class="cfg-btn" data-orientation="horizontal">Horizontal</button>
+        </div>
         <div class="cfg-label">Accès au logement</div>
         <div class="cfg-row" id="cfg-acces">
           <button type="button" class="cfg-btn" data-etage="0">Plain-pied, RDC ou ascenseur</button>
@@ -570,7 +575,17 @@
         <h3 id="cfg-titre">100 L, blindée</h3>
         <div class="cfg-price" id="cfg-prix">790 €</div>
         <div class="cfg-price-note" id="cfg-note">Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.</div>
-        <a href="#contact" class="btn btn-primary" id="cfg-cta">Réserver ce chauffe-eau</a>
+        <div id="cfg-resa-champs" style="margin:16px 0 4px;display:flex;flex-direction:column;gap:8px;">
+          <input id="cfg-nom" type="text" placeholder="Votre nom" autocomplete="name">
+          <input id="cfg-tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel">
+          <input id="cfg-ville" type="text" placeholder="Votre commune" autocomplete="address-level2">
+        </div>
+        <p class="cfg-price-note" style="margin-bottom:10px;">
+          Acompte de <span id="cfg-acompte-pct">30</span>&nbsp;% à la réservation (carte bancaire, via Stripe),
+          solde réglé une fois l'intervention terminée.
+        </p>
+        <button type="button" class="btn btn-primary" id="cfg-cta" style="width:100%;">Réserver ce chauffe-eau</button>
+        <p id="cfg-resa-erreur" style="display:none;color:var(--red,#B5442E);font-size:13px;margin-top:8px;"></p>
         <a href="#" class="btn btn-ghost" id="cfg-devis" style="margin-top:10px;text-align:center;">Voir le devis indicatif</a>
       </div>
     </div>
@@ -1086,14 +1101,33 @@
   // dela dans ce configurateur. Prix materiel nettement plus eleve qu'un
   // ballon standard a volume egal (forme plate plus cher a fabriquer), d'ou
   // un tarif client sensiblement plus haut que le blinde/steatite/ACI.
+  // Prix par orientation. "vertical" couvre le mural (75 a 200L) et le
+  // stable/sur socle (250-300L, un 300L ne monte jamais au mur, cf. note
+  // plus bas sur la page) -- c'est l'orientation par defaut, la seule
+  // vendue jusqu'ici. "horizontal" est une vraie gamme a part chez Thermor
+  // (raccordement dessous ou dessus selon le modele), pas juste le meme
+  // appareil couche : le materiel coute nettement plus cher a volume egal
+  // (564 € le 100L horizontal contre ~240 € le 100L vertical). Seul le
+  // 100L blindé horizontal a un tarif fournisseur confirme pour l'instant
+  // (ref. Thermor 253014, raccordement dessous) ; les volumes/types
+  // absents de "horizontal" ci-dessous ne sont pas encore proposables en
+  // ligne, le bouton Horizontal se desactive automatiquement pour eux
+  // jusqu'a avoir de vrais tarifs fournisseur (meme mecanique que Malicio
+  // au-dela de 150L).
   const PRIX_CFG = {
-    "75":  { base: 690,  aci: null, malicio: null },
-    "100": { base: 790,  aci: 940,  malicio: 1090 },
-    "150": { base: 890,  aci: 1090, malicio: 1240 },
-    "200": { base: 1090, aci: 1390, malicio: null },
-    "250": { base: 1290, aci: 1640, malicio: null },
-    "300": { base: 1350, aci: 1750, malicio: null },
+    vertical: {
+      "75":  { base: 690,  aci: null, malicio: null },
+      "100": { base: 790,  aci: 1140, malicio: 1090 },
+      "150": { base: 890,  aci: 1240, malicio: 1240 },
+      "200": { base: 1170, aci: 1470, malicio: null },
+      "250": { base: 1290, aci: 1640, malicio: null },
+      "300": { base: 1320, aci: 1720, malicio: null },
+    },
+    horizontal: {
+      "100": { base: 1280, aci: 1420, malicio: null },
+    },
   };
+  const ORIENTATION_LABEL = { vertical: "vertical", horizontal: "horizontal" };
   const TYPE_LABEL = { blindee: "blindée", steatite: "stéatite", aci: "ACI Hybride", malicio: "Malicio, gain de place" };
   const EMPLACEMENT_LABEL = { sdb: "salle de bain / cuisine", placard: "placard", garage: "garage / cave", grenier: "grenier / combles" };
   // Supplement d'acces sans ascenseur : par etage au-dela du 1er, proportionnel
@@ -1121,6 +1155,7 @@
   };
   let cfgVolume = "100";
   let cfgType = "blindee";
+  let cfgOrientation = "vertical";
   let cfgEtage = 0;
   let cfgEmplacement = "sdb";
 
@@ -1131,13 +1166,23 @@
   }
 
   function dessinerConfigurateur(){
-    const dispo = PRIX_CFG[cfgVolume];
+    // L'orientation choisie peut ne pas exister pour ce volume (tarif
+    // fournisseur pas encore obtenu) : on revient sur vertical, qui couvre
+    // toujours tous les volumes.
+    if (!PRIX_CFG[cfgOrientation][cfgVolume]) cfgOrientation = "vertical";
+    const dispo = PRIX_CFG[cfgOrientation][cfgVolume];
     const btnAci = document.querySelector('#cfg-types [data-type="aci"]');
     const btnMalicio = document.querySelector('#cfg-types [data-type="malicio"]');
     btnAci.disabled = dispo.aci === null;
     btnMalicio.disabled = dispo.malicio === null;
     if (dispo.aci === null && cfgType === "aci") cfgType = "blindee";
     if (dispo.malicio === null && cfgType === "malicio") cfgType = "blindee";
+
+    document.querySelectorAll("#cfg-orientation .cfg-btn").forEach((b) => {
+      const dispoOrientation = PRIX_CFG[b.dataset.orientation][cfgVolume];
+      b.disabled = !dispoOrientation;
+      b.classList.toggle("active", b.dataset.orientation === cfgOrientation);
+    });
 
     document.querySelectorAll("#cfg-volumes .cfg-btn").forEach((b) => b.classList.toggle("active", b.dataset.vol === cfgVolume));
     document.querySelectorAll("#cfg-types .cfg-btn").forEach((b) => b.classList.toggle("active", b.dataset.type === cfgType));
@@ -1149,7 +1194,7 @@
     const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
     const prix = base + supEtage + supEmplacement;
 
-    document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType];
+    document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation];
     document.getElementById("cfg-prix").textContent = prix + " €";
 
     let note = "Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.";
@@ -1175,6 +1220,12 @@
     cfgType = btn.dataset.type;
     dessinerConfigurateur();
   });
+  document.getElementById("cfg-orientation").addEventListener("click", (e) => {
+    const btn = e.target.closest(".cfg-btn");
+    if (!btn || btn.disabled) return;
+    cfgOrientation = btn.dataset.orientation;
+    dessinerConfigurateur();
+  });
   document.getElementById("cfg-acces").addEventListener("click", (e) => {
     const btn = e.target.closest(".cfg-btn");
     if (!btn) return;
@@ -1192,28 +1243,81 @@
   // Calcule le prix actuel du configurateur en un seul endroit, reutilise
   // par le CTA "Réserver ce chauffe-eau" et par le generateur de devis.
   function calculPrixActuel(){
-    const dispo = PRIX_CFG[cfgVolume];
+    const dispo = PRIX_CFG[cfgOrientation][cfgVolume];
     const base = prixBase(dispo, cfgType);
     const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
     const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
     return { base, supEtage, supEmplacement, total: base + supEtage + supEmplacement };
   }
 
-  // Le CTA du configurateur emmene vers le formulaire avec la config choisie
-  // pre-remplie dans le message, pour eviter au client de la retaper.
-  document.getElementById("cfg-cta").addEventListener("click", () => {
-    setTimeout(() => {
-      const msg = document.getElementById("msg");
-      const { total } = calculPrixActuel();
-      if (!msg.value) {
-        msg.value = "Chauffe-eau souhaité : " + cfgVolume + " L, type " + TYPE_LABEL[cfgType] +
-          ", accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement] +
-          " (prix indiqué sur le site : " + total + " €).";
+  // Le CTA du configurateur cree l'acompte Stripe (backend paca-paiement,
+  // mode "Azur direct" -- voir ce projet) et redirige le client dessus.
+  // Pas de compte partenaire a fournir : sans partenaireStripeId, le Worker
+  // encaisse directement sur le compte Stripe de Lionel, sans commission.
+  const PACA_PAIEMENT_URL = "https://paca-paiement.clercq-ent.workers.dev";
+
+  // Bandeau de confirmation au retour de Stripe (succes ou annulation).
+  (function afficherRetourPaiement(){
+    const statut = new URLSearchParams(location.search).get("reservation");
+    if (!statut) return;
+    const bandeau = document.createElement("div");
+    bandeau.style.cssText = "position:sticky;top:0;z-index:999;padding:14px 20px;text-align:center;font-weight:600;" +
+      (statut === "ok"
+        ? "background:#0C6149;color:#fff;"
+        : "background:#F0F9FF;color:var(--navy-deep);border-bottom:1px solid var(--line);");
+    bandeau.textContent = statut === "ok"
+      ? "Acompte reçu, merci ! Je vous contacte très vite pour fixer la date de l'intervention."
+      : "Paiement annulé, aucune somme n'a été prélevée. Vous pouvez retenter à tout moment ci-dessous.";
+    document.body.prepend(bandeau);
+  })();
+
+  function descriptionConfig(){
+    return cfgVolume + " L, " + TYPE_LABEL[cfgType] + " (" + ORIENTATION_LABEL[cfgOrientation] + "), " +
+      "accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement];
+  }
+
+  document.getElementById("cfg-cta").addEventListener("click", async () => {
+    const bouton = document.getElementById("cfg-cta");
+    const erreur = document.getElementById("cfg-resa-erreur");
+    const nom = document.getElementById("cfg-nom").value.trim();
+    const tel = document.getElementById("cfg-tel").value.trim();
+    const ville = document.getElementById("cfg-ville").value.trim();
+    erreur.style.display = "none";
+
+    if (!nom || !tel || !ville) {
+      erreur.textContent = "Merci de renseigner votre nom, votre téléphone et votre commune avant de réserver.";
+      erreur.style.display = "block";
+      return;
+    }
+
+    const { total } = calculPrixActuel();
+    bouton.disabled = true;
+    bouton.textContent = "Redirection vers le paiement…";
+
+    try {
+      const reponse = await fetch(PACA_PAIEMENT_URL + "/creer-paiement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: descriptionConfig() + " — " + nom + ", " + ville,
+          totalEuros: total,
+          clientTelephone: tel,
+          urlSucces: location.origin + location.pathname + "?reservation=ok",
+          urlAnnulation: location.origin + location.pathname + "?reservation=annulee#tarifs",
+        }),
+      });
+      const donnees = await reponse.json();
+      if (!reponse.ok || !donnees.url) {
+        throw new Error(donnees.erreur || "réponse inattendue du serveur de paiement");
       }
-      document.getElementById("besoin").value = "Remplacement";
-      const logementSelect = document.getElementById("logement");
-      if (cfgEtage > 0) logementSelect.value = "Appartement sans ascenseur";
-    }, 300);
+      location.href = donnees.url;
+    } catch (err) {
+      erreur.textContent = "Le paiement n'a pas pu démarrer (" + err.message + "). " +
+        "Vous pouvez aussi me contacter directement au 06 44 17 08 79.";
+      erreur.style.display = "block";
+      bouton.disabled = false;
+      bouton.textContent = "Réserver ce chauffe-eau";
+    }
   });
 
   // Genere un devis indicatif imprimable a partir de la config choisie et
@@ -1233,7 +1337,7 @@
     const validite = new Date(now.getTime() + 30*24*3600*1000).toLocaleDateString("fr-FR");
 
     const lignes = [
-      ["Chauffe-eau " + cfgVolume + " L, résistance " + TYPE_LABEL[cfgType] + " (Thermor)", base]
+      ["Chauffe-eau " + cfgVolume + " L, résistance " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation] + " (Thermor)", base]
     ];
     if (supEtage > 0) lignes.push(["Supplément accès (" + labelEtage(cfgEtage) + ")", supEtage]);
     if (supEmplacement > 0) lignes.push(["Supplément emplacement (" + EMPLACEMENT_LABEL[cfgEmplacement] + ")", supEmplacement]);
