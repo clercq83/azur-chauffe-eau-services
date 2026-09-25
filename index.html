@@ -1075,11 +1075,12 @@
       <textarea id="msg" placeholder="Décrivez votre panne ou votre projet. Si vous êtes sans ascenseur, précisez l'étage."></textarea>
       <p style="margin:-10px 0 18px;font-size:12.5px;color:var(--slate-soft);">
         📷 Une ou deux photos de votre chauffe-eau (l'appareil entier, et son emplacement) m'aident
-        à évaluer l'accès et le volume avant même de me déplacer. Pensez à les joindre au mail qui
-        va s'ouvrir, avant de l'envoyer.
+        à évaluer l'accès et le volume avant même de me déplacer. Envoyez-les par WhatsApp au
+        06 44 17 08 79 juste après votre demande.
       </p>
+      <input type="text" id="site-web" name="site" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <button type="button" class="btn-primary" id="envoyer-demande">Réserver mon créneau</button>
-      <p id="envoi-note" style="margin-top:12px;font-size:12.5px;color:var(--slate-soft);" hidden>Votre e-mail va s'ouvrir avec le message pré-rempli, il ne reste qu'à l'envoyer. Le créneau est une demande : je vous recontacte pour le confirmer, puis vous envoie le lien de paiement de l'acompte pour valider définitivement la réservation.</p>
+      <p id="envoi-note" role="status" style="margin-top:12px;font-size:12.5px;color:var(--slate-soft);" hidden></p>
     </form>
   </div>
 </section>
@@ -1364,6 +1365,8 @@
           description: descriptionConfig() + ", " + nom + ", " + ville,
           totalEuros: total,
           clientTelephone: tel,
+          clientNom: nom,
+          clientCommune: ville,
           urlSucces: location.origin + location.pathname + "?reservation=ok",
           urlAnnulation: location.origin + location.pathname + "?reservation=annulee#tarifs",
         }),
@@ -1467,26 +1470,64 @@
   // Stripe/SumUp), donc le formulaire ouvre un e-mail pre-rempli vers
   // l'adresse deja surveillee, creneau souhaite inclus a confirmer par
   // telephone.
-  document.getElementById("envoyer-demande").addEventListener("click", () => {
-    const nom = document.getElementById("nom").value || "(non renseigné)";
-    const tel = document.getElementById("tel").value || "(non renseigné)";
-    const ville = document.getElementById("ville").value || "(non renseignée)";
-    const logement = document.getElementById("logement").value;
-    const besoin = document.getElementById("besoin").value;
-    const mur = document.getElementById("mur").value;
-    const jour = document.getElementById("jour").value || "(pas de préférence)";
-    const moment = document.getElementById("moment").value;
-    const msg = document.getElementById("msg").value || "(aucun message)";
-    const sujet = encodeURIComponent("Demande de réservation, Azur Chauffe-Eau Services");
-    const corps = encodeURIComponent(
-      "Besoin : " + besoin + "\nNom : " + nom + "\nTéléphone : " + tel +
-      "\nCommune : " + ville + "\nLogement : " + logement +
-      "\nNature du mur : " + mur +
-      "\nJour souhaité : " + jour + "\nMoment préféré : " + moment +
-      "\n\nMessage :\n" + msg
-    );
-    window.location.href = "mailto:" + partenaireActuel().email + "?subject=" + sujet + "&body=" + corps;
-    document.getElementById("envoi-note").hidden = false;
+  document.getElementById("envoyer-demande").addEventListener("click", async () => {
+    const champ = (id) => document.getElementById(id).value.trim();
+    const bouton = document.getElementById("envoyer-demande");
+    const note = document.getElementById("envoi-note");
+    const d = {
+      nom: champ("nom"), telephone: champ("tel"), commune: champ("ville"),
+      logement: champ("logement"), besoin: champ("besoin"), mur: champ("mur"),
+      jour: champ("jour"), moment: champ("moment"), message: champ("msg"),
+      site: champ("site-web"), source: "azur-chauffe-eau.fr",
+    };
+    const afficher = (texte, erreur) => {
+      note.textContent = texte;
+      note.style.color = erreur ? "var(--red)" : "var(--slate-soft)";
+      note.hidden = false;
+    };
+    if (d.nom.length < 2 || d.telephone.replace(/\D/g, "").length < 9) {
+      afficher("Merci d'indiquer votre nom et votre numéro de téléphone, pour que je puisse vous rappeler.", true);
+      return;
+    }
+
+    // Secours par e-mail : si l'enregistrement echoue, ou tant que l'alerte
+    // SMS vers Lionel n'est pas active, pour qu'aucune demande ne passe inapercue.
+    const ouvrirMail = () => {
+      const sujet = encodeURIComponent("Demande de réservation, Azur Chauffe-Eau Services");
+      const corps = encodeURIComponent(
+        "Besoin : " + d.besoin + "\nNom : " + d.nom + "\nTéléphone : " + d.telephone +
+        "\nCommune : " + (d.commune || "(non renseignée)") + "\nLogement : " + d.logement +
+        "\nNature du mur : " + d.mur +
+        "\nJour souhaité : " + (d.jour || "(pas de préférence)") + "\nMoment préféré : " + d.moment +
+        "\n\nMessage :\n" + (d.message || "(aucun message)")
+      );
+      window.location.href = "mailto:" + partenaireActuel().email + "?subject=" + sujet + "&body=" + corps;
+    };
+
+    bouton.disabled = true;
+    bouton.textContent = "Envoi en cours…";
+    try {
+      const rep = await fetch(PACA_PAIEMENT_URL + "/demande", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(d),
+      });
+      const res = await rep.json();
+      if (!rep.ok) {
+        afficher(res.erreur || "L'envoi n'a pas abouti, appelez-moi au 06 44 17 08 79.", true);
+      } else if (res.alerteEnvoyee) {
+        afficher("Merci, votre demande est bien enregistrée. Je vous rappelle rapidement pour confirmer le créneau.");
+      } else {
+        afficher("Merci, votre demande est enregistrée. Votre messagerie va s'ouvrir pour me l'envoyer aussi par e-mail, il ne reste qu'à cliquer sur Envoyer.");
+        ouvrirMail();
+      }
+    } catch (e) {
+      afficher("Votre messagerie va s'ouvrir avec le message pré-rempli, il ne reste qu'à l'envoyer.");
+      ouvrirMail();
+    } finally {
+      bouton.disabled = false;
+      bouton.textContent = "Réserver mon créneau";
+    }
   });
 
   // Lien venant de paca-chauffe-eau-services : ?secteur=ouest ou ?secteur=argens.

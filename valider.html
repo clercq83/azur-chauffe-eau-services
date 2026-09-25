@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Valider votre intervention | Azur Chauffe-Eau Services</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2312283D'/%3E%3Cpath d='M16 6C16 6 9 15 9 20a7 7 0 0 0 14 0c0-5-7-14-7-14z' fill='%23C97A3D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bleu:#0EA5E9;--bleu-fonce:#0369A1;--fond:#F0F9FF;--texte:#1A1A1A;--doux:#4E5A67;--ligne:#BAE6FD;--ok:#0C6149;--alerte:#B5442E;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--fond);color:var(--texte);font-family:'Public Sans',system-ui,sans-serif;line-height:1.55;}
+  header{padding:18px 20px;border-bottom:1px solid var(--ligne);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:19px;}
+  header span{color:var(--bleu);}
+  main{max-width:520px;margin:0 auto;padding:26px 20px 60px;}
+  h1{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:26px;line-height:1.2;margin:0 0 10px;}
+  p{margin:0 0 14px;color:var(--doux);font-size:15.5px;}
+  .carte{background:#fff;border:1px solid var(--ligne);border-radius:14px;padding:18px;margin:18px 0;}
+  .ligne{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:15px;font-variant-numeric:tabular-nums;}
+  .ligne.total{border-top:1px solid var(--ligne);margin-top:6px;padding-top:12px;font-weight:700;font-size:17px;color:var(--texte);}
+  .desc{font-size:14px;color:var(--doux);margin-bottom:8px;}
+  button{width:100%;border:none;border-radius:999px;padding:15px 18px;font:600 16px 'Public Sans',system-ui,sans-serif;cursor:pointer;margin-top:10px;}
+  button:focus-visible{outline:3px solid var(--bleu-fonce);outline-offset:2px;}
+  button:disabled{opacity:.6;cursor:default;}
+  .principal{background:var(--bleu-fonce);color:#fff;}
+  .secondaire{background:#fff;color:var(--bleu-fonce);border:1.5px solid var(--bleu-fonce);}
+  .note{font-size:13px;color:var(--doux);margin-top:8px;}
+  .message{border-radius:12px;padding:14px 16px;font-size:15px;margin:16px 0;}
+  .message.ok{background:#E3F3EA;color:var(--ok);}
+  .message.alerte{background:#F7E9E2;color:var(--alerte);}
+  .contact{margin-top:28px;font-size:14px;color:var(--doux);}
+  .contact a{color:var(--bleu-fonce);font-weight:600;}
+</style>
+</head>
+<body>
+<header>Azur <span>·</span> Chauffe-Eau Services</header>
+<main>
+  <h1>Valider votre intervention</h1>
+  <div id="contenu"><p>Chargement de votre intervention…</p></div>
+  <p class="contact">Une question avant de valider ? Appelez-moi au <a href="tel:+33644170879">06 44 17 08 79</a>.</p>
+</main>
+<script>
+const API = "https://paca-paiement.clercq-ent.workers.dev";
+const params = new URLSearchParams(location.search);
+const resaId = params.get("resa");
+const retourPaiement = params.get("ok") === "1";
+const contenu = document.getElementById("contenu");
+
+const euros = (c) => (c / 100).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " €";
+const dateHeure = (iso) => new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+const echapper = (t) => String(t || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+function recap(resa) {
+  return '<div class="carte">' +
+    (resa.description ? '<div class="desc">' + echapper(resa.description) + '</div>' : '') +
+    '<div class="ligne"><span>Prix total</span><span>' + euros(resa.totalCentimes) + '</span></div>' +
+    '<div class="ligne"><span>Acompte déjà réglé</span><span>' + euros(resa.acompteCentimes) + '</span></div>' +
+    '<div class="ligne total"><span>Solde à régler</span><span>' + euros(resa.soldeCentimes) + '</span></div>' +
+    '</div>';
+}
+
+async function payerAvec(methode, bouton, libelle) {
+  bouton.disabled = true;
+  bouton.textContent = "Redirection vers le paiement sécurisé…";
+  try {
+    const rep = await fetch(API + "/solde-checkout", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ reservationId: resaId, methode }),
+    });
+    const d = await rep.json();
+    if (d.url) { location.href = d.url; return; }
+    throw new Error(d.erreur || "erreur");
+  } catch (e) {
+    bouton.disabled = false;
+    bouton.textContent = libelle;
+    afficherErreur("Le paiement n'a pas pu démarrer. Réessayez, ou appelez-moi.");
+  }
+}
+
+function afficherErreur(texte) {
+  let bloc = document.getElementById("erreur");
+  if (!bloc) { bloc = document.createElement("div"); bloc.id = "erreur"; bloc.className = "message alerte"; contenu.appendChild(bloc); }
+  bloc.textContent = texte;
+}
+
+function boutonsPaiement(resa, echec) {
+  const solde = euros(resa.soldeCentimes);
+  let html = recap(resa);
+  if (echec) {
+    html += '<div class="message alerte">Le prélèvement automatique n\'a pas abouti. Vous pouvez régler le solde par carte ci-dessous.</div>' +
+      '<button class="principal" id="carte">Payer ' + solde + ' par carte</button>';
+  } else {
+    html += '<p>En validant, le solde est réglé avec la carte utilisée pour l\'acompte, et tout est clos.' +
+      (resa.validationAutoLe ? ' Sans réponse de votre part, il sera prélevé automatiquement ' + dateHeure(resa.validationAutoLe) + '.' : '') + '</p>' +
+      '<button class="principal" id="valider">Je valide et je règle ' + solde + '</button>';
+  }
+  html += '<button class="secondaire" id="klarna">Payer en 3 ou 4 fois sans frais avec Klarna</button>' +
+    '<p class="note">Le nombre d\'échéances et leurs dates s\'affichent chez Klarna avant de confirmer.</p>';
+  contenu.innerHTML = html;
+
+  const klarna = document.getElementById("klarna");
+  klarna.onclick = () => payerAvec("klarna", klarna, "Payer en 3 ou 4 fois sans frais avec Klarna");
+  const carte = document.getElementById("carte");
+  if (carte) carte.onclick = () => payerAvec("carte", carte, "Payer " + solde + " par carte");
+  const valider = document.getElementById("valider");
+  if (valider) valider.onclick = async () => {
+    valider.disabled = true;
+    valider.textContent = "Règlement en cours…";
+    try {
+      const rep = await fetch(API + "/valider-solde", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reservationId: resaId }),
+      });
+      const d = await rep.json();
+      if (d.ok) {
+        contenu.innerHTML = '<div class="message ok">Merci, le solde de ' + solde + ' est réglé. Tout est clos de votre côté.</div>';
+      } else {
+        init();
+      }
+    } catch (e) {
+      valider.disabled = false;
+      valider.textContent = "Je valide et je règle " + solde;
+      afficherErreur("La connexion a échoué. Réessayez dans un instant.");
+    }
+  };
+}
+
+async function init(essai = 0) {
+  if (!resaId) { contenu.innerHTML = '<p>Ce lien est incomplet. Utilisez le lien reçu par SMS, ou appelez-moi.</p>'; return; }
+  let resa;
+  try {
+    const r = await fetch(API + "/reservations/" + encodeURIComponent(resaId));
+    if (!r.ok) { contenu.innerHTML = '<p>Intervention introuvable. Vérifiez le lien reçu par SMS, ou appelez-moi.</p>'; return; }
+    resa = await r.json();
+  } catch (e) {
+    contenu.innerHTML = '<p>Connexion impossible pour le moment. Réessayez dans un instant.</p>';
+    return;
+  }
+
+  if (resa.statut === "solde_paye") {
+    contenu.innerHTML = '<div class="message ok">Merci, le solde est réglé. Tout est clos de votre côté.</div>';
+    return;
+  }
+  if (retourPaiement && essai < 6) {
+    contenu.innerHTML = '<div class="message ok">Paiement reçu, confirmation en cours…</div>';
+    setTimeout(() => init(essai + 1), 2500);
+    return;
+  }
+  if (resa.statut === "chantier_termine") return boutonsPaiement(resa, false);
+  if (resa.statut === "solde_echec") return boutonsPaiement(resa, true);
+  contenu.innerHTML = '<p>Cette intervention n\'est pas encore prête à être validée. Vous recevrez un SMS à la fin du chantier.</p>';
+}
+init();
+</script>
+</body>
+</html>
