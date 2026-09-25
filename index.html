@@ -1361,7 +1361,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          description: descriptionConfig() + " — " + nom + ", " + ville,
+          description: descriptionConfig() + ", " + nom + ", " + ville,
           totalEuros: total,
           clientTelephone: tel,
           urlSucces: location.origin + location.pathname + "?reservation=ok",
@@ -1404,7 +1404,7 @@
     if (supEtage > 0) lignes.push(["Supplément accès (" + labelEtage(cfgEtage) + ")", supEtage]);
     if (supEmplacement > 0) lignes.push(["Supplément emplacement (" + EMPLACEMENT_LABEL[cfgEmplacement] + ")", supEmplacement]);
     const lignesHTML = lignes.map(([label, montant]) =>
-      "<tr><td>" + label + " — fourniture et pose comprises</td><td style='text-align:right'>" + montant + " €</td></tr>"
+      "<tr><td>" + label + ", fourniture et pose comprises</td><td style='text-align:right'>" + montant + " €</td></tr>"
     ).join("");
 
     return "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'>" +
@@ -1418,9 +1418,9 @@
       "@media print{body{margin:0;}}" +
       "</style></head><body>" +
       "<h1>Azur Chauffe-Eau Services</h1>" +
-      "<p class='petit'>" + p.nom + " — " + p.forme + " — SIRET " + p.siret + "<br>" + p.adresse + " — " + p.tel + " — " + p.email + "</p>" +
+      "<p class='petit'>" + p.nom + " · " + p.forme + " · SIRET " + p.siret + "<br>" + p.adresse + " · " + p.tel + " · " + p.email + "</p>" +
       "<h2>Devis indicatif n° " + numero + "</h2>" +
-      "<p class='petit'>Date : " + dateStr + " — Valable jusqu'au " + validite + "</p>" +
+      "<p class='petit'>Date : " + dateStr + " · Valable jusqu'au " + validite + "</p>" +
       "<h2>Client</h2>" +
       "<p>" + nomClient + "<br>" + communeClient + "</p>" +
       "<h2>Détail</h2>" +
