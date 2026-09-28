@@ -1177,7 +1177,12 @@
   // ligne, le bouton Horizontal se desactive automatiquement pour eux
   // jusqu'a avoir de vrais tarifs fournisseur (meme mecanique que Malicio
   // au-dela de 150L).
-  const PRIX_CFG = {
+  // "let" et non "const" : ces trois tarifs peuvent etre remplaces au
+  // chargement par ceux enregistres depuis le pilotage (voir
+  // chargerTarifsEtDemarrer plus bas). Ce qui suit reste la valeur par
+  // defaut, utilisee tant que rien n'a ete enregistre cote Worker, ou si le
+  // Worker ne repond pas -- le site continue toujours de fonctionner.
+  let PRIX_CFG = {
     vertical: {
       "75":  { base: 690,  aci: null, malicio: null },
       "100": { base: 790,  aci: 1140, malicio: 1090 },
@@ -1199,7 +1204,7 @@
   // haut sur la page). Le 1er etage ne coute rien de plus qu'un RDC (une
   // seule volee de marches, pas un effort notable) : le supplement ne
   // demarre qu'a partir du 2e etage.
-  const SUPPLEMENT_PAR_ETAGE = { "75": 8, "100": 15, "150": 22, "200": 35, "250": 50, "300": 60 };
+  let SUPPLEMENT_PAR_ETAGE = { "75": 8, "100": 15, "150": 22, "200": 35, "250": 50, "300": 60 };
   function etagesFactures(n){ return Math.max(0, n - 1); }
   function labelEtage(n){
     if (n === 0) return "plain-pied, RDC ou ascenseur";
@@ -1210,7 +1215,7 @@
   // trappe ou une echelle et un espace exigu, plus long a manoeuvrer qu'un
   // garage ou une salle de bain classique. Placard = espace un peu plus
   // contraint pour deconnecter/reconnecter, leger supplement.
-  const SUPPLEMENT_EMPLACEMENT = {
+  let SUPPLEMENT_EMPLACEMENT = {
     sdb:     { "75": 0,  "100": 0,  "150": 0,  "200": 0,   "250": 0,   "300": 0   },
     garage:  { "75": 0,  "100": 0,  "150": 0,  "200": 0,   "250": 0,   "300": 0   },
     placard: { "75": 10, "100": 15, "150": 20, "200": 25,  "250": 30,  "300": 30  },
@@ -1301,7 +1306,6 @@
     cfgEmplacement = btn.dataset.emplacement;
     dessinerConfigurateur();
   });
-  dessinerConfigurateur();
 
   // Calcule le prix actuel du configurateur en un seul endroit, reutilise
   // par le CTA "Réserver ce chauffe-eau" et par le generateur de devis.
@@ -1318,6 +1322,25 @@
   // Pas de compte partenaire a fournir : sans partenaireStripeId, le Worker
   // encaisse directement sur le compte Stripe de Lionel, sans commission.
   const PACA_PAIEMENT_URL = "https://paca-paiement.clercq-ent.workers.dev";
+
+  // Va chercher les tarifs enregistres depuis le pilotage (route /tarifs du
+  // Worker, modifiable sans repasser par le code) avant le tout premier
+  // rendu du configurateur. Si rien n'est enregistre, ou si le Worker ne
+  // repond pas, on garde les valeurs par defaut ci-dessus : le site
+  // fonctionne toujours, meme hors ligne du Worker.
+  async function chargerTarifsEtDemarrer(){
+    try {
+      const r = await fetch(PACA_PAIEMENT_URL + "/tarifs?zone=azur");
+      if (r.ok) {
+        const t = await r.json();
+        if (t.prixCfg) PRIX_CFG = t.prixCfg;
+        if (t.supplementEtage) SUPPLEMENT_PAR_ETAGE = t.supplementEtage;
+        if (t.supplementEmplacement) SUPPLEMENT_EMPLACEMENT = t.supplementEmplacement;
+      }
+    } catch (e) {}
+    dessinerConfigurateur();
+  }
+  chargerTarifsEtDemarrer();
 
   // Bandeau de confirmation au retour de Stripe (succes ou annulation).
   (function afficherRetourPaiement(){
