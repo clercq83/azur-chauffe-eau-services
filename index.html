@@ -558,9 +558,9 @@
 
 <section class="hero">
   <div class="wrap">
-    <div class="eyebrow">Électromécanicien de formation, 20 ans de technique</div>
-    <h1>Une panne d'eau chaude ne devrait jamais durer.</h1>
-    <p>Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères.</p>
+    <div class="eyebrow" id="txt-hero-eyebrow">Électromécanicien de formation, 20 ans de technique</div>
+    <h1 id="txt-hero-titre">Une panne d'eau chaude ne devrait jamais durer.</h1>
+    <p id="txt-hero-texte">Dépannage, remplacement et pose de chauffe-eau électriques Thermor et Atlantic, de Saint-Cyr-sur-Mer à Hyères.</p>
     <div class="actions">
       <a href="tel:+33644170879" class="btn btn-primary" style="background:var(--red);border-color:var(--red);">☎ Panne maintenant, appelez</a>
       <span style="align-self:center;font-weight:700;color:var(--slate);font-size:15px;">06 44 17 08 79</span>
@@ -590,8 +590,8 @@
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow">Transparence</div>
-      <h2>Des tarifs clairs, dès le devis</h2>
-      <p>Voici mes bases de facturation, pour que vous sachiez à quoi vous attendre avant de m'appeler. Pour un remplacement, choisissez votre volume et votre type ci-dessous : le prix affiché est un prix ferme, fourniture et pose comprises.</p>
+      <h2 id="txt-tarifs-titre">Des tarifs clairs, dès le devis</h2>
+      <p id="txt-tarifs-texte">Voici mes bases de facturation, pour que vous sachiez à quoi vous attendre avant de m'appeler. Pour un remplacement, choisissez votre volume et votre type ci-dessous : le prix affiché est un prix ferme, fourniture et pose comprises.</p>
     </div>
     <div class="cfg">
       <div class="cfg-panel">
@@ -694,8 +694,8 @@
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow">Qui je suis</div>
-      <h2>Vingt ans de technique avant de poser votre chauffe-eau</h2>
-      <p>Je ne suis pas un réseau qui vous envoie un inconnu. C'est moi qui viens, et voici d'où je viens.</p>
+      <h2 id="txt-apropos-titre">Vingt ans de technique avant de poser votre chauffe-eau</h2>
+      <p id="txt-apropos-texte">Je ne suis pas un réseau qui vous envoie un inconnu. C'est moi qui viens, et voici d'où je viens.</p>
     </div>
     <div class="grid-3">
       <div class="card">
@@ -721,8 +721,8 @@
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow">Prestations</div>
-      <h2>Trois interventions, un seul métier</h2>
-      <p>Je ne fais que du chauffe-eau électrique. C'est ce qui me permet d'intervenir vite et bien, sans détour.</p>
+      <h2 id="txt-services-titre">Trois interventions, un seul métier</h2>
+      <p id="txt-services-texte">Je ne fais que du chauffe-eau électrique. C'est ce qui me permet d'intervenir vite et bien, sans détour.</p>
     </div>
     <div class="grid-3">
       <div class="card">
@@ -956,8 +956,8 @@
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow">Zone d'intervention</div>
-      <h2>Je me déplace de Saint-Cyr-sur-Mer à Hyères</h2>
-      <p>Cliquez sur votre commune pour voir si un supplément de déplacement s'applique.</p>
+      <h2 id="txt-zone-titre">Je me déplace de Saint-Cyr-sur-Mer à Hyères</h2>
+      <p id="txt-zone-texte">Cliquez sur votre commune pour voir si un supplément de déplacement s'applique.</p>
     </div>
 
     <div class="zone-calc">
@@ -1341,6 +1341,35 @@
     dessinerConfigurateur();
   }
   chargerTarifsEtDemarrer();
+
+  // Textes et couleurs modifiables depuis le pilotage (route /contenu du
+  // Worker, meme mecanique que /tarifs plus haut). Chaque cle de "textes"
+  // est directement l'id de l'element concerne sur la page (txt-hero-titre,
+  // etc.) : rien d'autre a synchroniser cote site quand un champ est ajoute
+  // ou retire depuis le pilotage. Les couleurs ecrasent les variables CSS
+  // --navy/--copper (couleur principale, boutons et accents) et --cream
+  // (fond) directement sur <html>, qui l'emporte sur les valeurs du :root
+  // du fichier. Si rien n'est enregistre ou si le Worker ne repond pas, le
+  // site garde ses textes et couleurs actuels.
+  async function chargerContenuEtCouleurs(){
+    try {
+      const r = await fetch(PACA_PAIEMENT_URL + "/contenu?zone=azur");
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.textes) {
+        Object.entries(d.textes).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if (el && val) el.textContent = val;
+        });
+      }
+      if (d.couleurs) {
+        const racine = document.documentElement.style;
+        if (d.couleurs.principale) { racine.setProperty("--navy", d.couleurs.principale); racine.setProperty("--copper", d.couleurs.principale); }
+        if (d.couleurs.fond) racine.setProperty("--cream", d.couleurs.fond);
+      }
+    } catch (e) {}
+  }
+  chargerContenuEtCouleurs();
 
   // Bandeau de confirmation au retour de Stripe (succes ou annulation).
   (function afficherRetourPaiement(){
