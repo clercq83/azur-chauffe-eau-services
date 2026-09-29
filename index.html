@@ -1416,6 +1416,11 @@
         body: JSON.stringify({
           description: descriptionConfig() + ", " + nom + ", " + ville,
           totalEuros: total,
+          // Volume/type structures, en plus de la description en texte libre :
+          // sert au pilotage a decompter automatiquement le bon chauffe-eau du
+          // stock quand le chantier est marque termine.
+          volume: cfgVolume,
+          type: cfgType,
           clientTelephone: tel,
           clientNom: nom,
           clientCommune: ville,
