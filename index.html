@@ -643,6 +643,14 @@
           <input id="cfg-tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel">
           <input id="cfg-ville" type="text" placeholder="Votre commune" autocomplete="address-level2">
         </div>
+        <div id="cfg-creneau" style="margin:4px 0 8px;display:flex;flex-direction:column;gap:8px;">
+          <label for="cfg-jour" style="font-size:12.5px;color:var(--slate-soft);">Jour souhaité pour l'intervention</label>
+          <input id="cfg-jour" type="date">
+          <select id="cfg-demi">
+            <option value="">Choisissez d'abord une date</option>
+          </select>
+          <p id="cfg-creneau-statut" style="font-size:12px;color:var(--slate-soft);display:none;"></p>
+        </div>
         <p class="cfg-price-note" style="margin-bottom:10px;">
           Acompte de <span id="cfg-acompte-pct">30</span>&nbsp;% à la réservation (carte bancaire, via Stripe),
           solde réglé une fois l'intervention terminée.
@@ -1323,6 +1331,54 @@
   // encaisse directement sur le compte Stripe de Lionel, sans commission.
   const PACA_PAIEMENT_URL = "https://paca-paiement.clercq-ent.workers.dev";
 
+  // --- Calendrier partage direct (Var/83) ---------------------------------
+  // Tant que Lionel est seul sur Azur, Provence et Alpes-Maritimes, un
+  // creneau reserve ici bloque aussi les deux autres sites (regle de
+  // geographie : le Var est compatible avec les deux autres departements,
+  // eux ne sont pas compatibles entre eux -- voir paca-paiement/src/index.js).
+  const DEPT_SITE = "83";
+  const ENSEIGNE_SITE = "Azur Chauffe-Eau Services";
+  let creneauxPris = [];
+
+  function creneauEstPris(jour, demi) {
+    return creneauxPris.some((c) => c.jour === jour && c.demi === demi);
+  }
+
+  async function chargerDisponibilites() {
+    try {
+      const r = await fetch(PACA_PAIEMENT_URL + "/disponibilites-directes?dept=" + DEPT_SITE + "&jours=60");
+      if (r.ok) creneauxPris = (await r.json()).pris || [];
+    } catch (e) {}
+  }
+  chargerDisponibilites();
+
+  function majOptionsDemi() {
+    const champDemi = document.getElementById("cfg-demi");
+    const statut = document.getElementById("cfg-creneau-statut");
+    const jour = document.getElementById("cfg-jour").value;
+    champDemi.innerHTML = "";
+    if (!jour) {
+      champDemi.innerHTML = "<option value=''>Choisissez d'abord une date</option>";
+      statut.style.display = "none";
+      return;
+    }
+    const options = [
+      { valeur: "matin", label: "Matin", pris: creneauEstPris(jour, "matin") },
+      { valeur: "apresMidi", label: "Après-midi", pris: creneauEstPris(jour, "apresMidi") },
+    ];
+    options.forEach((o) => {
+      const opt = document.createElement("option");
+      opt.value = o.pris ? "" : o.valeur;
+      opt.textContent = o.pris ? o.label + " (indisponible)" : o.label;
+      opt.disabled = o.pris;
+      champDemi.appendChild(opt);
+    });
+    statut.style.display = options.every((o) => o.pris) ? "block" : "none";
+    statut.textContent = "Aucun créneau disponible ce jour-là, choisissez une autre date.";
+  }
+  document.getElementById("cfg-jour").addEventListener("change", majOptionsDemi);
+  document.getElementById("cfg-jour").min = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+
   // Va chercher les tarifs enregistres depuis le pilotage (route /tarifs du
   // Worker, modifiable sans repasser par le code) avant le tout premier
   // rendu du configurateur. Si rien n'est enregistre, ou si le Worker ne
@@ -1381,7 +1437,7 @@
         ? "background:#0C6149;color:#fff;"
         : "background:#F0F9FF;color:var(--navy-deep);border-bottom:1px solid var(--line);");
     bandeau.textContent = statut === "ok"
-      ? "Acompte reçu, merci ! Je vous contacte très vite pour fixer la date de l'intervention."
+      ? "Acompte reçu, merci ! Votre rendez-vous est confirmé, vous recevez votre devis par e-mail dans quelques instants."
       : "Paiement annulé, aucune somme n'a été prélevée. Vous pouvez retenter à tout moment ci-dessous.";
     document.body.prepend(bandeau);
   })();
@@ -1397,10 +1453,17 @@
     const nom = document.getElementById("cfg-nom").value.trim();
     const tel = document.getElementById("cfg-tel").value.trim();
     const ville = document.getElementById("cfg-ville").value.trim();
+    const jour = document.getElementById("cfg-jour").value;
+    const demi = document.getElementById("cfg-demi").value;
     erreur.style.display = "none";
 
     if (!nom || !tel || !ville) {
       erreur.textContent = "Merci de renseigner votre nom, votre téléphone et votre commune avant de réserver.";
+      erreur.style.display = "block";
+      return;
+    }
+    if (!jour || !demi) {
+      erreur.textContent = "Merci de choisir un jour et un moment (matin/après-midi) pour l'intervention.";
       erreur.style.display = "block";
       return;
     }
@@ -1421,6 +1484,9 @@
           // stock quand le chantier est marque termine.
           volume: cfgVolume,
           type: cfgType,
+          jour, demi,
+          dept: DEPT_SITE,
+          enseigne: ENSEIGNE_SITE,
           clientTelephone: tel,
           clientNom: nom,
           clientCommune: ville,
@@ -1439,6 +1505,10 @@
       erreur.style.display = "block";
       bouton.disabled = false;
       bouton.textContent = "Réserver ce chauffe-eau";
+      // Le creneau vient peut-etre d'etre pris par un autre departement
+      // pendant que le client remplissait le formulaire : on rafraichit la
+      // liste pour que le selecteur reflete l'etat reel.
+      chargerDisponibilites().then(majOptionsDemi);
     }
   });
 
