@@ -1230,13 +1230,12 @@
   // vendue jusqu'ici. "horizontal" est une vraie gamme a part chez Thermor
   // (raccordement dessous ou dessus selon le modele), pas juste le meme
   // appareil couche : le materiel coute nettement plus cher a volume egal
-  // (564 € le 100L horizontal contre ~240 € le 100L vertical). Seul le
-  // 100L blindé horizontal a un tarif fournisseur confirme pour l'instant
-  // (ref. Thermor 253014, raccordement dessous) ; les volumes/types
-  // absents de "horizontal" ci-dessous ne sont pas encore proposables en
-  // ligne, le bouton Horizontal se desactive automatiquement pour eux
-  // jusqu'a avoir de vrais tarifs fournisseur (meme mecanique que Malicio
-  // au-dela de 150L).
+  // (564 € le 100L horizontal contre ~240 € le 100L vertical). Le 100L est
+  // le tarif d'origine ; 75/150/200L ajoutes le 9 oct. 2026 = tarif du 100L
+  // + ecart de prix d'achat du catalogue Thermor (horizontal raccords
+  // dessous) + meme supplement de pose que le 100L, arrondis. Les volumes
+  // absents de "horizontal" (250/300L) se desactivent tout seuls (meme
+  // mecanique que Malicio au-dela de 150L).
   // "let" et non "const" : ces trois tarifs peuvent etre remplaces au
   // chargement par ceux enregistres depuis le pilotage (voir
   // chargerTarifsEtDemarrer plus bas). Ce qui suit reste la valeur par
@@ -1252,7 +1251,10 @@
       "300": { base: 1320, aci: 1720, malicio: null },
     },
     horizontal: {
+      "75":  { base: 1025, aci: null, malicio: null },
       "100": { base: 1280, aci: 1420, malicio: null },
+      "150": { base: 1420, aci: 1580, malicio: null },
+      "200": { base: 1720, aci: 1860, malicio: null },
     },
   };
   // Eau moyennement calcaire dans le Var (carte de durete par departement) :
