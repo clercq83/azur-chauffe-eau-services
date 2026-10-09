@@ -310,6 +310,13 @@
   .cfg-opt-txt strong{display:block;font-weight:600;color:var(--slate);}
   .cfg-opt-txt small{display:block;font-size:12.5px;color:var(--slate-soft);margin-top:2px;}
   .cfg-opt-prix{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;color:var(--navy-deep);white-space:nowrap;margin-top:2px;}
+  .cfg-visuel{height:124px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .cfg-visuel svg{height:100%;width:auto;max-width:100%;}
+  .cfg-visuel img{height:100%;width:100%;object-fit:contain;}
+  .cfg-legende{margin:-6px 0 16px;padding:12px 14px;background:rgba(14,165,233,.07);border-left:3px solid var(--navy);border-radius:0 12px 12px 0;font-size:13px;line-height:1.5;color:var(--slate-soft);}
+  .cfg-legende strong{display:block;color:var(--slate);font-size:14px;margin-bottom:3px;}
+  .cfg-legende[hidden]{display:none;}
+  .cfg-opt-voir{margin-top:6px;padding:0;background:none;border:none;font:inherit;font-size:12px;font-weight:600;color:var(--navy-deep);text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
   .cfg-opt[hidden]{display:none;}
   .cfg-opt-reco{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--navy-deep);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;letter-spacing:.04em;vertical-align:middle;}
   .cfg-opt-reco[hidden]{display:none;}
@@ -689,6 +696,8 @@
         </div>
       </div>
       <div class="cfg-result">
+        <div class="cfg-visuel" id="cfg-visuel"></div>
+        <div class="cfg-legende" id="cfg-legende" hidden></div>
         <div class="cfg-eyebrow" id="cfg-eyebrow">Chauffe-eau Thermor</div>
         <h3 id="cfg-titre">100 L, blindée</h3>
         <div class="cfg-price" id="cfg-prix">790 €</div>
@@ -1314,6 +1323,69 @@
     { id: "trepied",   label: "Pied au sol (trépied)", detail: "Le ballon repose sur un support au sol au lieu d'une fixation au mur.", prix: 80, volumes: ["75", "100", "150", "200"] },
     { id: "patte",     label: "Patte de rattrapage d'entraxe", detail: "Fixe le nouveau ballon sur les anciens trous, sans percer le mur.", prix: 110 },
   ];
+  // Visuel du modele choisi. Chaque cle peut recevoir une vraie photo : il
+  // suffit d'ajouter le fichier dans photos/produits/ et la ligne
+  // correspondante ici, par exemple vertical: "photos/produits/vertical.webp".
+  // Sans photo, une illustration simple est affichee (aucune image de
+  // catalogue : elles appartiennent aux fabricants).
+  const PHOTOS_PRODUITS = {};
+  const VISUELS_SVG = {
+    vertical: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chauffe-eau vertical fixé au mur"><rect x="14" y="6" width="4" height="98" fill="var(--line)"/><path d="M18 30h38M18 66h38" stroke="var(--slate-soft)" stroke-width="2.5" stroke-dasharray="3 3"/><rect x="56" y="8" width="48" height="78" rx="15" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><path d="M62 30q9-5 18 0t18 0M62 48q9-5 18 0t18 0" stroke="var(--copper-light)" stroke-width="1.8" fill="none"/><circle cx="80" cy="20" r="3" fill="var(--amber)"/><path d="M70 86v16" stroke="var(--navy-deep)" stroke-width="4" stroke-linecap="round"/><path d="M90 86v16" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/></svg>',
+    horizontal: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chauffe-eau horizontal fixé au mur"><rect x="10" y="6" width="4" height="98" fill="var(--line)"/><path d="M14 34h24M14 74h24" stroke="var(--slate-soft)" stroke-width="2.5" stroke-dasharray="3 3"/><rect x="36" y="32" width="100" height="44" rx="20" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><path d="M52 46q6-5 12 0t12 0t12 0M52 62q6-5 12 0t12 0t12 0" stroke="var(--copper-light)" stroke-width="1.8" fill="none"/><circle cx="122" cy="54" r="3" fill="var(--amber)"/><path d="M62 76v22" stroke="var(--navy-deep)" stroke-width="4" stroke-linecap="round"/><path d="M82 76v22" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/></svg>',
+    plat: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chauffe-eau plat, gain de place"><rect x="14" y="6" width="4" height="98" fill="var(--line)"/><path d="M18 28h38M18 66h38" stroke="var(--slate-soft)" stroke-width="2.5" stroke-dasharray="3 3"/><rect x="56" y="8" width="52" height="82" rx="7" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><rect x="66" y="18" width="32" height="10" rx="3" fill="var(--cream)" stroke="var(--teal)" stroke-width="1.6"/><circle cx="82" cy="62" r="5" fill="none" stroke="var(--navy)" stroke-width="2"/><path d="M70 90v12" stroke="var(--navy-deep)" stroke-width="4" stroke-linecap="round"/><path d="M96 90v12" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/></svg>',
+    stable: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chauffe-eau stable posé au sol"><path d="M10 100h140" stroke="var(--line)" stroke-width="4"/><rect x="54" y="6" width="52" height="88" rx="12" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><path d="M60 28q10-5 20 0t20 0M60 48q10-5 20 0t20 0M60 68q10-5 20 0t20 0" stroke="var(--copper-light)" stroke-width="1.8" fill="none"/><circle cx="80" cy="16" r="3" fill="var(--amber)"/><rect x="50" y="94" width="60" height="6" rx="2" fill="var(--navy-deep)"/></svg>',
+  };
+  // Illustrations et explications des options materiel : un clic sur une
+  // option (ou sur "Voir") les affiche a la place du ballon. Cle "opt-<id>"
+  // dans PHOTOS_PRODUITS pour y mettre une vraie photo.
+  const VISUELS_OPTIONS = {
+    mitigeur: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mitigeur thermostatique"><rect x="50" y="34" width="60" height="30" rx="8" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><circle cx="80" cy="24" r="13" fill="var(--cream)" stroke="var(--navy)" stroke-width="2.5"/><path d="M80 24l6-6" stroke="var(--navy-deep)" stroke-width="2.5" stroke-linecap="round"/><path d="M22 49h28" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><path d="M110 49h28" stroke="var(--navy-deep)" stroke-width="6" stroke-linecap="round"/><path d="M80 64v30" stroke="var(--teal)" stroke-width="6" stroke-linecap="round"/><text x="12" y="40" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--red)">chaud</text><text x="118" y="40" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--navy-deep)">froid</text><text x="90" y="92" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--teal)">eau mitigée</text></svg>',
+    vase: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vase d\'expansion"><ellipse cx="80" cy="44" rx="34" ry="36" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><path d="M48 46q32-12 64 0" stroke="var(--slate-soft)" stroke-width="2" fill="none" stroke-dasharray="4 3"/><path d="M52 58q28 14 56 0" stroke="none" fill="var(--copper-light)" opacity=".5"/><rect x="72" y="80" width="16" height="10" fill="var(--navy-deep)"/><path d="M80 90v14" stroke="var(--navy-deep)" stroke-width="4" stroke-linecap="round"/><text x="68" y="34" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--slate-soft)">air</text><text x="68" y="68" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--navy-deep)">eau</text></svg>',
+    reducteur: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Réducteur de pression"><path d="M14 66h30M116 66h30" stroke="var(--navy-deep)" stroke-width="6" stroke-linecap="round"/><rect x="44" y="50" width="72" height="32" rx="8" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><circle cx="80" cy="30" r="17" fill="var(--cream)" stroke="var(--navy)" stroke-width="2.5"/><path d="M80 30l9-8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><path d="M80 47v3" stroke="var(--navy)" stroke-width="3"/><text x="14" y="58" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--red)">&gt; 5 bars</text><text x="106" y="58" font-family="Public Sans" font-size="9" font-weight="600" fill="var(--teal)">réduite</text></svg>',
+    trepied: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pied au sol"><path d="M10 102h140" stroke="var(--line)" stroke-width="4"/><rect x="52" y="6" width="56" height="64" rx="16" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><circle cx="80" cy="18" r="3" fill="var(--amber)"/><path d="M48 76h64" stroke="var(--navy-deep)" stroke-width="5" stroke-linecap="round"/><path d="M58 76v26M102 76v26M80 76v26" stroke="var(--navy-deep)" stroke-width="4" stroke-linecap="round"/></svg>',
+    patte: '<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Patte de rattrapage d\'entraxe"><rect x="10" y="6" width="140" height="98" fill="var(--cream)"/><circle cx="48" cy="30" r="4" fill="var(--slate-soft)"/><circle cx="112" cy="30" r="4" fill="var(--slate-soft)"/><rect x="36" y="22" width="88" height="66" rx="8" fill="#fff" stroke="var(--navy)" stroke-width="2.5"/><rect x="44" y="36" width="14" height="30" rx="7" fill="none" stroke="var(--navy-deep)" stroke-width="2.5"/><rect x="102" y="36" width="14" height="30" rx="7" fill="none" stroke="var(--navy-deep)" stroke-width="2.5"/><path d="M62 51h36" stroke="var(--copper-light)" stroke-width="3" stroke-dasharray="4 3"/></svg>',
+  };
+  const EXPLICATIONS_OPTIONS = {
+    mitigeur: "Il mélange l'eau chaude du ballon avec de l'eau froide, pour que l'eau aux robinets ne dépasse jamais la température réglée, en général 50 °C. Le ballon peut ainsi rester à 60 °C, ce qui limite les bactéries, sans risque de brûlure pour les enfants ou les personnes âgées.",
+    vase: "Quand l'eau chauffe, elle se dilate. Sans vase d'expansion, ce surplus sort par le groupe de sécurité, goutte à goutte. Le vase absorbe cette dilatation : plus de gouttes, et moins d'usure pour le groupe de sécurité.",
+    reducteur: "Si la pression de votre réseau dépasse 5 bars, le réducteur la ramène à une valeur normale. Il protège le ballon, le groupe de sécurité et vos robinets. Je mesure la pression chez vous au devis, et je vous dis si c'est utile.",
+    trepied: "Pour un gros ballon ou un mur peu solide, le ballon se pose sur un pied au sol : aucune charge sur la cloison, pose plus stable. Un 150 L rempli pèse près de 190 kg, un 200 L près de 250 kg.",
+    patte: "Si le nouveau ballon n'a pas les mêmes fixations que l'ancien, cette patte permet de le suspendre sur les trous existants, sans percer à nouveau votre mur ni laisser de trous apparents.",
+  };
+  let optionVue = null;
+  function montrerVisuel(cle, svg, alt){
+    const conteneur = document.getElementById("cfg-visuel");
+    if (PHOTOS_PRODUITS[cle]) {
+      conteneur.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = PHOTOS_PRODUITS[cle];
+      img.alt = alt;
+      conteneur.appendChild(img);
+    } else {
+      conteneur.innerHTML = svg;
+    }
+  }
+  function dessinerVisuel(){
+    const legende = document.getElementById("cfg-legende");
+    const o = optionVue ? OPTIONS_CFG.find((x) => x.id === optionVue) : null;
+    if (o) {
+      montrerVisuel("opt-" + o.id, VISUELS_OPTIONS[o.id] || "", o.label);
+      legende.innerHTML = "";
+      const t = document.createElement("strong");
+      t.textContent = o.label + ", + " + o.prix + " €";
+      const p = document.createElement("span");
+      p.textContent = EXPLICATIONS_OPTIONS[o.id] || o.detail || "";
+      legende.appendChild(t); legende.appendChild(p);
+      legende.hidden = false;
+      return;
+    }
+    legende.hidden = true;
+    let cle = "vertical";
+    if (cfgType === "malicio") cle = "plat";
+    else if (Number(cfgVolume) >= 250) cle = "stable";
+    else if (cfgOrientation === "horizontal") cle = "horizontal";
+    montrerVisuel(cle, VISUELS_SVG[cle], "Chauffe-eau Thermor " + cle);
+  }
   const cfgOptions = new Set();
   function optionApplicable(o){ return !o.volumes || o.volumes.includes(cfgVolume); }
   function optionsChoisies(){ return OPTIONS_CFG.filter((o) => cfgOptions.has(o.id) && Number(o.prix) > 0 && optionApplicable(o)); }
@@ -1365,7 +1437,8 @@
       input.checked = cfgOptions.has(o.id);
       input.addEventListener("change", () => {
         if (input.checked) cfgOptions.add(o.id); else cfgOptions.delete(o.id);
-        dessinerConfigurateur();
+        optionVue = o.id;
+        dessinerConfigurateur(true);
       });
       const txt = document.createElement("span");
       txt.className = "cfg-opt-txt";
@@ -1378,7 +1451,16 @@
       fort.appendChild(reco);
       const petit = document.createElement("small");
       petit.textContent = o.detail || "";
-      txt.appendChild(fort); txt.appendChild(petit);
+      const voir = document.createElement("button");
+      voir.type = "button";
+      voir.className = "cfg-opt-voir";
+      voir.textContent = "Voir en image";
+      voir.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        optionVue = o.id;
+        dessinerConfigurateur(true);
+      });
+      txt.appendChild(fort); txt.appendChild(petit); txt.appendChild(voir);
       const prix = document.createElement("span");
       prix.className = "cfg-opt-prix";
       prix.textContent = "+ " + o.prix + " €";
@@ -1424,7 +1506,8 @@
     return dispo.base;
   }
 
-  function dessinerConfigurateur(){
+  function dessinerConfigurateur(garderOption){
+    if (!garderOption) optionVue = null;
     // L'orientation choisie peut ne pas exister pour ce volume (tarif
     // fournisseur pas encore obtenu) : on revient sur vertical, qui couvre
     // toujours tous les volumes.
@@ -1457,6 +1540,7 @@
     document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation];
     document.getElementById("cfg-eau-note").textContent = NOTE_EAU[cfgType];
     majOptionsVisibles();
+    dessinerVisuel();
     document.getElementById("cfg-prix").textContent = prix + " €";
 
     let note = "Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.";
