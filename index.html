@@ -301,6 +301,18 @@
     .eau-bloc{grid-template-columns:1fr;padding:24px 20px;}
   }
   .cfg-hint{font-size:12.5px;color:var(--slate-soft);margin-top:10px;}
+  .cfg-options{display:flex;flex-direction:column;gap:8px;}
+  .cfg-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;transition:border-color .15s, background .15s;}
+  .cfg-opt:hover{border-color:var(--navy);}
+  .cfg-opt:has(input:checked){border-color:var(--navy);background:rgba(14,165,233,.07);}
+  .cfg-opt input{margin-top:4px;accent-color:var(--navy-deep);width:16px;height:16px;flex:none;}
+  .cfg-opt-txt{flex:1;font-size:14px;line-height:1.35;}
+  .cfg-opt-txt strong{display:block;font-weight:600;color:var(--slate);}
+  .cfg-opt-txt small{display:block;font-size:12.5px;color:var(--slate-soft);margin-top:2px;}
+  .cfg-opt-prix{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;color:var(--navy-deep);white-space:nowrap;margin-top:2px;}
+  .cfg-materiel{margin:0 0 16px;font-size:13.5px;color:var(--slate-soft);border-top:1px solid var(--line);padding-top:12px;}
+  .cfg-materiel summary{cursor:pointer;font-weight:600;color:var(--slate);}
+  .cfg-materiel ul{margin:10px 0 0 18px;display:flex;flex-direction:column;gap:4px;}
 
   /* Brands */
   .brands{display:flex;gap:24px;}
@@ -659,12 +671,26 @@
           <button type="button" class="cfg-btn" data-emplacement="garage">Garage / cave</button>
           <button type="button" class="cfg-btn" data-emplacement="grenier">Grenier / combles</button>
         </div>
+        <div id="cfg-options-bloc">
+          <div class="cfg-label">Options matériel, facultatif</div>
+          <div class="cfg-options" id="cfg-options"></div>
+        </div>
       </div>
       <div class="cfg-result">
         <div class="cfg-eyebrow" id="cfg-eyebrow">Chauffe-eau Thermor</div>
         <h3 id="cfg-titre">100 L, blindée</h3>
         <div class="cfg-price" id="cfg-prix">790 €</div>
         <div class="cfg-price-note" id="cfg-note">Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.</div>
+        <details class="cfg-materiel">
+          <summary>Matériel de pose compris dans le prix</summary>
+          <ul>
+            <li>Groupe de sécurité NF neuf</li>
+            <li>Raccords diélectriques anti-corrosion (obligatoires)</li>
+            <li>Siphon et entonnoir d'évacuation</li>
+            <li>Flexibles d'alimentation et d'évacuation</li>
+            <li>Fixations adaptées à votre ballon</li>
+          </ul>
+        </details>
         <div id="cfg-resa-champs" style="margin:16px 0 4px;display:flex;flex-direction:column;gap:8px;">
           <input id="cfg-nom" type="text" placeholder="Votre nom" autocomplete="name">
           <input id="cfg-tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel">
@@ -1265,6 +1291,50 @@
     aci: "La plus durable, bien adaptée à une eau calcaire comme celle du Var.",
     malicio: "Résistance stéatite sous fourreau, bien adaptée à l'eau du Var.",
   };
+  // Options materiel facultatives (prix client, pose comprise). Prix = environ
+  // 1,6 fois le prix d'achat TTC du catalogue + un forfait de pose, arrondi
+  // (9 oct. 2026). Modifiables depuis le pilotage (section Tarifs Azur) :
+  // une option dont le prix est vide ou a 0 disparait du site.
+  let OPTIONS_CFG = [
+    { id: "mitigeur",  label: "Mitigeur thermostatique", detail: "Limite la température de l'eau aux robinets, protège contre les brûlures.", prix: 250 },
+    { id: "vase",      label: "Vase d'expansion 8 L", detail: "Absorbe la dilatation de l'eau chauffée et évite les gouttes au groupe de sécurité.", prix: 155 },
+    { id: "reducteur", label: "Réducteur de pression", detail: "Nécessaire si la pression de votre réseau dépasse 5 bars.", prix: 125 },
+    { id: "trepied",   label: "Trépied au sol", detail: "Le ballon repose sur un support au sol au lieu d'une fixation au mur.", prix: 80 },
+    { id: "patte",     label: "Patte de rattrapage d'entraxe", detail: "Fixe le nouveau ballon sur les anciens trous, sans percer le mur.", prix: 110 },
+  ];
+  const cfgOptions = new Set();
+  function optionsChoisies(){ return OPTIONS_CFG.filter((o) => cfgOptions.has(o.id) && Number(o.prix) > 0); }
+  function prixOptions(){ return optionsChoisies().reduce((t, o) => t + Number(o.prix), 0); }
+  function dessinerOptions(){
+    const dispo = OPTIONS_CFG.filter((o) => Number(o.prix) > 0);
+    [...cfgOptions].forEach((id) => { if (!dispo.some((o) => o.id === id)) cfgOptions.delete(id); });
+    const conteneur = document.getElementById("cfg-options");
+    conteneur.innerHTML = "";
+    document.getElementById("cfg-options-bloc").style.display = dispo.length ? "" : "none";
+    dispo.forEach((o) => {
+      const label = document.createElement("label");
+      label.className = "cfg-opt";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = cfgOptions.has(o.id);
+      input.addEventListener("change", () => {
+        if (input.checked) cfgOptions.add(o.id); else cfgOptions.delete(o.id);
+        dessinerConfigurateur();
+      });
+      const txt = document.createElement("span");
+      txt.className = "cfg-opt-txt";
+      const fort = document.createElement("strong");
+      fort.textContent = o.label;
+      const petit = document.createElement("small");
+      petit.textContent = o.detail || "";
+      txt.appendChild(fort); txt.appendChild(petit);
+      const prix = document.createElement("span");
+      prix.className = "cfg-opt-prix";
+      prix.textContent = "+ " + o.prix + " €";
+      label.appendChild(input); label.appendChild(txt); label.appendChild(prix);
+      conteneur.appendChild(label);
+    });
+  }
   const ORIENTATION_LABEL = { vertical: "vertical", horizontal: "horizontal" };
   const TYPE_LABEL = { blindee: "blindée", steatite: "stéatite", aci: "ACI Hybride", malicio: "Malicio, gain de place" };
   const EMPLACEMENT_LABEL = { sdb: "salle de bain / cuisine", placard: "placard", garage: "garage / cave", grenier: "grenier / combles" };
@@ -1330,7 +1400,8 @@
     const base = prixBase(dispo, cfgType);
     const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
     const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
-    const prix = base + supEtage + supEmplacement;
+    const supOptions = prixOptions();
+    const prix = base + supEtage + supEmplacement + supOptions;
 
     document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation];
     document.getElementById("cfg-eau-note").textContent = NOTE_EAU[cfgType];
@@ -1344,6 +1415,8 @@
     if (supEtage > 0) extras.push(supEtage + " € accès (" + labelEtage(cfgEtage) + ")");
     if (supEmplacement > 0) extras.push(supEmplacement + " € emplacement " + EMPLACEMENT_LABEL[cfgEmplacement]);
     if (extras.length) note += " Inclut " + extras.join(" et ") + ".";
+    const opts = optionsChoisies();
+    if (opts.length) note += " Options : " + opts.map((o) => o.label.toLowerCase() + " (+" + o.prix + " €)").join(", ") + ".";
     document.getElementById("cfg-note").textContent = note;
   }
 
@@ -1407,7 +1480,8 @@
     const base = prixBase(dispo, cfgType);
     const supEtage = etagesFactures(cfgEtage) * SUPPLEMENT_PAR_ETAGE[cfgVolume];
     const supEmplacement = SUPPLEMENT_EMPLACEMENT[cfgEmplacement][cfgVolume];
-    return { base, supEtage, supEmplacement, total: base + supEtage + supEmplacement };
+    const supOptions = prixOptions();
+    return { base, supEtage, supEmplacement, supOptions, total: base + supEtage + supEmplacement + supOptions };
   }
 
   // Le CTA du configurateur cree l'acompte Stripe (backend paca-paiement,
@@ -1477,8 +1551,10 @@
         if (t.prixCfg) PRIX_CFG = t.prixCfg;
         if (t.supplementEtage) SUPPLEMENT_PAR_ETAGE = t.supplementEtage;
         if (t.supplementEmplacement) SUPPLEMENT_EMPLACEMENT = t.supplementEmplacement;
+        if (Array.isArray(t.options)) OPTIONS_CFG = t.options;
       }
     } catch (e) {}
+    dessinerOptions();
     dessinerConfigurateur();
   }
   chargerTarifsEtDemarrer();
@@ -1529,7 +1605,8 @@
 
   function descriptionConfig(){
     return cfgVolume + " L, " + TYPE_LABEL[cfgType] + " (" + ORIENTATION_LABEL[cfgOrientation] + "), " +
-      "accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement];
+      "accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement] +
+      (optionsChoisies().length ? ", options : " + optionsChoisies().map((o) => o.label.toLowerCase()).join(" + ") : "");
   }
 
   document.getElementById("cfg-cta").addEventListener("click", async () => {
@@ -1569,6 +1646,8 @@
           // stock quand le chantier est marque termine.
           volume: cfgVolume,
           type: cfgType,
+          orientation: cfgOrientation,
+          options: [...cfgOptions].join(","),
           jour, demi,
           dept: DEPT_SITE,
           enseigne: ENSEIGNE_SITE,
@@ -1618,6 +1697,7 @@
     ];
     if (supEtage > 0) lignes.push(["Supplément accès (" + labelEtage(cfgEtage) + ")", supEtage]);
     if (supEmplacement > 0) lignes.push(["Supplément emplacement (" + EMPLACEMENT_LABEL[cfgEmplacement] + ")", supEmplacement]);
+    optionsChoisies().forEach((o) => lignes.push(["Option : " + o.label, Number(o.prix)]));
     const lignesHTML = lignes.map(([label, montant]) =>
       "<tr><td>" + label + ", fourniture et pose comprises</td><td style='text-align:right'>" + montant + " €</td></tr>"
     ).join("");
