@@ -277,6 +277,31 @@
     .grid-5{grid-template-columns:repeat(2,1fr);}
   }
 
+  /* Cartes foyer cliquables : preregle le configurateur */
+  .vol-card[data-vol]{cursor:pointer;transition:border-color .15s, transform .15s;}
+  .vol-card[data-vol]:hover{border-color:var(--navy);transform:translateY(-2px);}
+  .vol-card[data-vol]:focus-visible{outline:3px solid var(--navy-deep);outline-offset:2px;}
+  .vol-card[data-vol]::after{content:"Voir le prix pour ce foyer";display:block;margin-top:12px;font-size:12px;font-weight:600;color:var(--navy-deep);}
+
+  /* Bloc "Votre eau" dans la section types de resistance */
+  .eau-bloc{margin-top:28px;display:grid;grid-template-columns:1fr 1.15fr;gap:32px;background:#075985;border:1px solid #0369A1;border-radius:18px;padding:32px 28px;}
+  .eau-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--copper-light);background:rgba(224,242,254,.15);padding:4px 10px;border-radius:999px;margin-bottom:14px;}
+  .eau-bloc h3{color:#fff;font-size:22px;margin-bottom:12px;}
+  .eau-bloc p{color:#C9D8E3;font-size:14.5px;margin-bottom:10px;}
+  .eau-bloc p strong{color:#fff;}
+  .eau-bloc .eau-petit{font-size:13px;color:#AFC0CC;}
+  .eau-scroll{overflow-x:auto;}
+  .eau-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .eau-table th,.eau-table td{padding:10px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.14);color:#E6EEF4;}
+  .eau-table thead th{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--copper-light);}
+  .eau-table tbody th{font-weight:500;color:#AFC0CC;}
+  .eau-table .reco{background:rgba(125,211,252,.14);}
+  .eau-table thead .reco{color:#fff;}
+  @media (max-width:820px){
+    .eau-bloc{grid-template-columns:1fr;padding:24px 20px;}
+  }
+  .cfg-hint{font-size:12.5px;color:var(--slate-soft);margin-top:10px;}
+
   /* Brands */
   .brands{display:flex;gap:24px;}
   .brand-card{
@@ -605,6 +630,7 @@
           <button type="button" class="cfg-btn" data-vol="250">250 L</button>
           <button type="button" class="cfg-btn" data-vol="300">300 L</button>
         </div>
+        <p class="cfg-hint" id="cfg-foyer-note" style="display:none;"></p>
         <div class="cfg-label">Type</div>
         <div class="cfg-row" id="cfg-types">
           <button type="button" class="cfg-btn" data-type="blindee">Blindée</button>
@@ -612,6 +638,7 @@
           <button type="button" class="cfg-btn" data-type="aci">ACI Hybride</button>
           <button type="button" class="cfg-btn" data-type="malicio">Malicio, gain de place</button>
         </div>
+        <p class="cfg-hint" id="cfg-eau-note"></p>
         <div class="cfg-label">Orientation</div>
         <div class="cfg-row" id="cfg-orientation">
           <button type="button" class="cfg-btn" data-orientation="vertical">Vertical</button>
@@ -818,6 +845,31 @@
         <p>Technologie Thermor : protection active contre la corrosion, en complément de l'anode. Le meilleur de la durabilité.</p>
       </div>
     </div>
+
+    <div class="eau-bloc" id="eau">
+      <div>
+        <div class="eau-badge">Dans le Var</div>
+        <h3>Votre eau est moyennement calcaire</h3>
+        <p>Selon la carte de dureté de l'eau par département, le Var est classé en eau <strong>moyennement calcaire</strong>. La résistance blindée est conseillée en eau peu calcaire : ici, la stéatite est le choix le plus sûr.</p>
+        <p>Protégée par un fourreau, la <strong>stéatite</strong> ne touche jamais l'eau, donc le calcaire s'y accroche beaucoup moins. Pour le maximum de durée de vie, l'<strong>ACI Hybride</strong> y ajoute une anode en titane, qui tire justement parti des minéraux d'une eau calcaire.</p>
+        <p class="eau-petit">La dureté varie d'une commune à l'autre. Je la vérifie chez vous au moment du devis gratuit.</p>
+      </div>
+      <div class="eau-scroll">
+        <table class="eau-table">
+          <thead>
+            <tr><th></th><th>Blindée</th><th class="reco">Stéatite</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Résistance au contact de l'eau</th><td>Oui</td><td class="reco">Non, sous fourreau</td></tr>
+            <tr><th scope="row">Prix</th><td>Le plus économique</td><td class="reco">Plus élevé</td></tr>
+            <tr><th scope="row">Tenue au calcaire</th><td>Faible</td><td class="reco">Élevée</td></tr>
+            <tr><th scope="row">Durée de vie</th><td>Plus courte</td><td class="reco">Plus longue</td></tr>
+            <tr><th scope="row">Entretien</th><td>Important</td><td class="reco">Modéré</td></tr>
+            <tr><th scope="row">Anode</th><td>Magnésium</td><td class="reco">Magnésium, ou titane (ACI)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -851,7 +903,7 @@
       <p>On compte environ 50 litres d'eau chaude par jour et par personne pour un usage courant. Voici comment ça se traduit en volume de ballon, avec pour chaque foyer une fourchette plutôt qu'un chiffre unique.</p>
     </div>
     <div class="grid-5">
-      <div class="card vol-card">
+      <div class="card vol-card" data-vol="75" data-foyer="1 personne" role="button" tabindex="0" aria-label="Régler le configurateur pour 1 personne">
         <div class="illus">
           <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" data-tier="t1">
             <circle cx="56" cy="18" r="3.2" fill="var(--navy)"/>
@@ -865,7 +917,7 @@
         <h3>1 personne</h3>
         <p>Douches rapides, évier</p>
       </div>
-      <div class="card vol-card">
+      <div class="card vol-card" data-vol="100" data-foyer="2 personnes" role="button" tabindex="0" aria-label="Régler le configurateur pour 2 personnes">
         <div class="illus">
           <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" data-tier="t2">
             <circle cx="56" cy="18" r="3.2" fill="var(--navy)"/><circle cx="66" cy="18" r="3.2" fill="var(--navy)"/>
@@ -879,7 +931,7 @@
         <h3>2 personnes</h3>
         <p>Usage courant, douches</p>
       </div>
-      <div class="card vol-card">
+      <div class="card vol-card" data-vol="150" data-foyer="3 personnes" role="button" tabindex="0" aria-label="Régler le configurateur pour 3 personnes">
         <div class="illus">
           <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" data-tier="t3">
             <circle cx="56" cy="18" r="3.2" fill="var(--navy)"/><circle cx="66" cy="18" r="3.2" fill="var(--navy)"/><circle cx="76" cy="18" r="3.2" fill="var(--navy)"/>
@@ -893,7 +945,7 @@
         <h3>3 personnes</h3>
         <p>Usage courant, ou bain occasionnel</p>
       </div>
-      <div class="card vol-card">
+      <div class="card vol-card" data-vol="200" data-foyer="4 personnes" role="button" tabindex="0" aria-label="Régler le configurateur pour 4 personnes">
         <div class="illus">
           <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" data-tier="t4">
             <circle cx="56" cy="18" r="3.2" fill="var(--navy)"/><circle cx="66" cy="18" r="3.2" fill="var(--navy)"/><circle cx="76" cy="18" r="3.2" fill="var(--navy)"/><circle cx="86" cy="18" r="3.2" fill="var(--navy)"/>
@@ -907,7 +959,7 @@
         <h3>4 personnes</h3>
         <p>Usage courant, salle de bain + cuisine</p>
       </div>
-      <div class="card vol-card">
+      <div class="card vol-card" data-vol="250" data-foyer="5 personnes et plus" role="button" tabindex="0" aria-label="Régler le configurateur pour 5 personnes et plus">
         <div class="illus">
           <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" data-tier="t5">
             <circle cx="56" cy="18" r="3.2" fill="var(--navy)"/><circle cx="66" cy="18" r="3.2" fill="var(--navy)"/><circle cx="76" cy="18" r="3.2" fill="var(--navy)"/><circle cx="86" cy="18" r="3.2" fill="var(--navy)"/><circle cx="96" cy="18" r="3.2" fill="var(--navy)"/>
@@ -1203,6 +1255,14 @@
       "100": { base: 1280, aci: 1420, malicio: null },
     },
   };
+  // Eau moyennement calcaire dans le Var (carte de durete par departement) :
+  // la steatite est conseillee, au meme prix que la blindee sur ce configurateur.
+  const NOTE_EAU = {
+    blindee: "Dans le Var l'eau est moyennement calcaire : la stéatite dure plus longtemps, au même prix.",
+    steatite: "Le type que je recommande pour l'eau du Var, moyennement calcaire.",
+    aci: "La plus durable, bien adaptée à une eau calcaire comme celle du Var.",
+    malicio: "Résistance stéatite sous fourreau, bien adaptée à l'eau du Var.",
+  };
   const ORIENTATION_LABEL = { vertical: "vertical", horizontal: "horizontal" };
   const TYPE_LABEL = { blindee: "blindée", steatite: "stéatite", aci: "ACI Hybride", malicio: "Malicio, gain de place" };
   const EMPLACEMENT_LABEL = { sdb: "salle de bain / cuisine", placard: "placard", garage: "garage / cave", grenier: "grenier / combles" };
@@ -1230,7 +1290,7 @@
     grenier: { "75": 30, "100": 50, "150": 70, "200": 110, "250": 160, "300": 190 },
   };
   let cfgVolume = "100";
-  let cfgType = "blindee";
+  let cfgType = "steatite";
   let cfgOrientation = "vertical";
   let cfgEtage = 0;
   let cfgEmplacement = "sdb";
@@ -1271,6 +1331,7 @@
     const prix = base + supEtage + supEmplacement;
 
     document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation];
+    document.getElementById("cfg-eau-note").textContent = NOTE_EAU[cfgType];
     document.getElementById("cfg-prix").textContent = prix + " €";
 
     let note = "Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.";
@@ -1288,6 +1349,7 @@
     const btn = e.target.closest(".cfg-btn");
     if (!btn) return;
     cfgVolume = btn.dataset.vol;
+    document.getElementById("cfg-foyer-note").style.display = "none";
     dessinerConfigurateur();
   });
   document.getElementById("cfg-types").addEventListener("click", (e) => {
@@ -1313,6 +1375,27 @@
     if (!btn) return;
     cfgEmplacement = btn.dataset.emplacement;
     dessinerConfigurateur();
+  });
+
+  // Cartes "Quel volume pour votre foyer ?" : un clic regle le configurateur
+  // sur le volume bas de la fourchette (le calcul strict de 50 L par personne),
+  // et rappelle de passer au volume du dessus en cas d'usage intensif.
+  function choisirFoyer(carte){
+    const volume = carte.dataset.vol;
+    if (!PRIX_CFG.vertical[volume]) return;
+    cfgVolume = volume;
+    cfgOrientation = "vertical";
+    const note = document.getElementById("cfg-foyer-note");
+    note.textContent = "Réglé pour " + carte.dataset.foyer.toLowerCase() + " (" + volume + " L). Passez au volume du dessus si vous prenez souvent des bains ou enchaînez les douches.";
+    note.style.display = "block";
+    dessinerConfigurateur();
+    document.getElementById("tarifs").scrollIntoView({ behavior: "smooth" });
+  }
+  document.querySelectorAll(".vol-card[data-vol]").forEach((carte) => {
+    carte.addEventListener("click", () => choisirFoyer(carte));
+    carte.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); choisirFoyer(carte); }
+    });
   });
 
   // Calcule le prix actuel du configurateur en un seul endroit, reutilise
