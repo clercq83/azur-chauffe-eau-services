@@ -310,6 +310,9 @@
   .cfg-opt-txt strong{display:block;font-weight:600;color:var(--slate);}
   .cfg-opt-txt small{display:block;font-size:12.5px;color:var(--slate-soft);margin-top:2px;}
   .cfg-opt-prix{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;color:var(--navy-deep);white-space:nowrap;margin-top:2px;}
+  .cfg-opt[hidden]{display:none;}
+  .cfg-opt-reco{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--navy-deep);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;letter-spacing:.04em;vertical-align:middle;}
+  .cfg-opt-reco[hidden]{display:none;}
   .cfg-materiel{margin:0 0 16px;font-size:13.5px;color:var(--slate-soft);border-top:1px solid var(--line);padding-top:12px;}
   .cfg-materiel summary{cursor:pointer;font-weight:600;color:var(--slate);}
   .cfg-materiel ul{margin:10px 0 0 18px;display:flex;flex-direction:column;gap:4px;}
@@ -671,9 +674,18 @@
           <button type="button" class="cfg-btn" data-emplacement="garage">Garage / cave</button>
           <button type="button" class="cfg-btn" data-emplacement="grenier">Grenier / combles</button>
         </div>
+        <div id="cfg-mur-bloc">
+          <div class="cfg-label">Nature du mur</div>
+          <div class="cfg-row" id="cfg-mur">
+            <button type="button" class="cfg-btn" data-mur="inconnu">Je ne sais pas</button>
+            <button type="button" class="cfg-btn" data-mur="plein">Mur plein (béton, parpaing, pierre)</button>
+            <button type="button" class="cfg-btn" data-mur="creux">Cloison creuse (placo, brique creuse)</button>
+          </div>
+        </div>
         <div id="cfg-options-bloc">
           <div class="cfg-label">Options matériel, facultatif</div>
           <div class="cfg-options" id="cfg-options"></div>
+          <p class="cfg-hint" id="cfg-pied-note" hidden></p>
         </div>
       </div>
       <div class="cfg-result">
@@ -1299,11 +1311,44 @@
     { id: "mitigeur",  label: "Mitigeur thermostatique", detail: "Limite la température de l'eau aux robinets, protège contre les brûlures.", prix: 250 },
     { id: "vase",      label: "Vase d'expansion 8 L", detail: "Absorbe la dilatation de l'eau chauffée et évite les gouttes au groupe de sécurité.", prix: 155 },
     { id: "reducteur", label: "Réducteur de pression", detail: "Nécessaire si la pression de votre réseau dépasse 5 bars.", prix: 125 },
-    { id: "trepied",   label: "Trépied au sol", detail: "Le ballon repose sur un support au sol au lieu d'une fixation au mur.", prix: 80 },
+    { id: "trepied",   label: "Pied au sol (trépied)", detail: "Le ballon repose sur un support au sol au lieu d'une fixation au mur.", prix: 80, volumes: ["75", "100", "150", "200"] },
     { id: "patte",     label: "Patte de rattrapage d'entraxe", detail: "Fixe le nouveau ballon sur les anciens trous, sans percer le mur.", prix: 110 },
   ];
   const cfgOptions = new Set();
-  function optionsChoisies(){ return OPTIONS_CFG.filter((o) => cfgOptions.has(o.id) && Number(o.prix) > 0); }
+  function optionApplicable(o){ return !o.volumes || o.volumes.includes(cfgVolume); }
+  function optionsChoisies(){ return OPTIONS_CFG.filter((o) => cfgOptions.has(o.id) && Number(o.prix) > 0 && optionApplicable(o)); }
+  // Nature du mur : sert a conseiller le pied au sol (un ballon plein est tres
+  // lourd pour une cloison creuse). Jamais coche automatiquement, le client
+  // decide. Les 250/300 L sont de toute facon sur socle, pas de mur concerne.
+  let cfgMur = "inconnu";
+  const MUR_LABEL = { plein: "mur plein", creux: "cloison creuse", inconnu: "" };
+  function murConcerne(){ return Number(cfgVolume) <= 200; }
+  function pied_conseille(){
+    const v = Number(cfgVolume);
+    return v <= 200 && ((v >= 150) || (cfgMur === "creux" && v >= 75));
+  }
+  function majOptionsVisibles(){
+    const conseille = pied_conseille();
+    document.getElementById("cfg-mur-bloc").style.display = murConcerne() ? "" : "none";
+    document.querySelectorAll("#cfg-mur .cfg-btn").forEach((b) => b.classList.toggle("active", b.dataset.mur === cfgMur));
+    document.querySelectorAll("#cfg-options .cfg-opt").forEach((el) => {
+      const o = OPTIONS_CFG.find((x) => x.id === el.dataset.opt);
+      if (!o) return;
+      el.hidden = !optionApplicable(o);
+      const badge = el.querySelector(".cfg-opt-reco");
+      if (badge) badge.hidden = !(o.id === "trepied" && conseille);
+    });
+    const note = document.getElementById("cfg-pied-note");
+    if (conseille && OPTIONS_CFG.some((o) => o.id === "trepied" && Number(o.prix) > 0)) {
+      const poids = { "75": "environ 110 kg", "100": "environ 140 kg", "150": "près de 190 kg", "200": "près de 250 kg" }[cfgVolume] || "plusieurs dizaines de kilos";
+      note.textContent = "Un " + cfgVolume + " L rempli pèse " + poids + (cfgMur === "creux"
+        ? ". Sur une cloison creuse, je conseille le pied au sol plutôt qu'une fixation au mur."
+        : ". Selon la solidité de votre mur, je peux le fixer au mur ou le poser sur un pied au sol, je vous conseille au devis.");
+      note.hidden = false;
+    } else {
+      note.hidden = true;
+    }
+  }
   function prixOptions(){ return optionsChoisies().reduce((t, o) => t + Number(o.prix), 0); }
   function dessinerOptions(){
     const dispo = OPTIONS_CFG.filter((o) => Number(o.prix) > 0);
@@ -1314,6 +1359,7 @@
     dispo.forEach((o) => {
       const label = document.createElement("label");
       label.className = "cfg-opt";
+      label.dataset.opt = o.id;
       const input = document.createElement("input");
       input.type = "checkbox";
       input.checked = cfgOptions.has(o.id);
@@ -1325,6 +1371,11 @@
       txt.className = "cfg-opt-txt";
       const fort = document.createElement("strong");
       fort.textContent = o.label;
+      const reco = document.createElement("span");
+      reco.className = "cfg-opt-reco";
+      reco.textContent = "Conseillé";
+      reco.hidden = true;
+      fort.appendChild(reco);
       const petit = document.createElement("small");
       petit.textContent = o.detail || "";
       txt.appendChild(fort); txt.appendChild(petit);
@@ -1405,6 +1456,7 @@
 
     document.getElementById("cfg-titre").textContent = cfgVolume + " L, " + TYPE_LABEL[cfgType] + ", " + ORIENTATION_LABEL[cfgOrientation];
     document.getElementById("cfg-eau-note").textContent = NOTE_EAU[cfgType];
+    majOptionsVisibles();
     document.getElementById("cfg-prix").textContent = prix + " €";
 
     let note = "Fourniture et pose comprises. Supplément de déplacement possible selon votre commune.";
@@ -1449,6 +1501,13 @@
     const btn = e.target.closest(".cfg-btn");
     if (!btn) return;
     cfgEmplacement = btn.dataset.emplacement;
+    dessinerConfigurateur();
+  });
+
+  document.getElementById("cfg-mur").addEventListener("click", (e) => {
+    const btn = e.target.closest(".cfg-btn");
+    if (!btn) return;
+    cfgMur = btn.dataset.mur;
     dessinerConfigurateur();
   });
 
@@ -1606,6 +1665,7 @@
   function descriptionConfig(){
     return cfgVolume + " L, " + TYPE_LABEL[cfgType] + " (" + ORIENTATION_LABEL[cfgOrientation] + "), " +
       "accès " + labelEtage(cfgEtage) + ", emplacement " + EMPLACEMENT_LABEL[cfgEmplacement] +
+      (murConcerne() && MUR_LABEL[cfgMur] ? ", " + MUR_LABEL[cfgMur] : "") +
       (optionsChoisies().length ? ", options : " + optionsChoisies().map((o) => o.label.toLowerCase()).join(" + ") : "");
   }
 
@@ -1647,7 +1707,7 @@
           volume: cfgVolume,
           type: cfgType,
           orientation: cfgOrientation,
-          options: [...cfgOptions].join(","),
+          options: optionsChoisies().map((o) => o.id).join(","),
           jour, demi,
           dept: DEPT_SITE,
           enseigne: ENSEIGNE_SITE,
